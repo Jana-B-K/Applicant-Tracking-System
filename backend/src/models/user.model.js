@@ -1,7 +1,11 @@
 import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema({
-  name: {
+  firstName: {
+    type: String,
+    required: true
+  },
+  lastName: {
     type: String,
     required: true
   },
@@ -18,6 +22,20 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['superadmin', 'hrrecruiter', 'hiringmanager','management']
   },
+  accessToken: {
+    type: String,
+  },
+  refreshToken: {
+    type: String,
+  },
+  passwordResetTokenHash: {
+    type: String,
+  },
+  passwordResetTokenExpiresAt: {
+    type: Date,
+  },
 }, { timestamps: true });
 
 const User = mongoose.model('User', userSchema);
+
+export default User;
