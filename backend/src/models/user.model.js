@@ -34,6 +34,13 @@ const userSchema = new mongoose.Schema({
   passwordResetTokenExpiresAt: {
     type: Date,
   },
+  passwordResetOtpAttempts: {
+    type: Number,
+    default: 0,
+  },
+  passwordResetLastSentAt: {
+    type: Date,
+  },
 }, { timestamps: true });
 
 const User = mongoose.model('User', userSchema);

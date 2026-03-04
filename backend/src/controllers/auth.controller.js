@@ -2,8 +2,13 @@ import {
   registerService,
   loginService,
   refreshAccessTokenService,
+  updateProfileService,
 } from "../services/auth.service.js";
-import { forgotPasswordService, resetPasswordService } from "../services/password.service.js";
+import {
+  forgotPasswordService,
+  resetPasswordService,
+  verifyResetTokenService,
+} from "../services/password.service.js";
 
 export const register = async (req, res, next) => {
   try {
@@ -50,7 +55,7 @@ export const login = async (req, res, next) => {
 
 export const refreshToken = async (req, res, next) => {
   try {
-    const token = req.cookies.refreshToken;
+    const token = req.body.refreshToken || req.cookies.refreshToken;
 
     const data = await refreshAccessTokenService(token);
 
@@ -87,10 +92,20 @@ export const resetPassword = async (req, res, next) => {
       ...result,
     });
   } catch (error) {
-    return res.status(400).json({
-      success: false,
-      message: error.message,
+    return next(error);
+  }
+};
+
+export const verifyResetToken = async (req, res, next) => {
+  try {
+    const result = await verifyResetTokenService(req.body);
+
+    return res.status(200).json({
+      success: true,
+      ...result,
     });
+  } catch (error) {
+    return next(error);
   }
 };
 
@@ -104,3 +119,19 @@ export const me = async (req, res, next) => {
     next(error);
   }
 };
+
+export const updateProfile = async (req, res, next) => {
+  try {
+    const { firstName, lastName, email } = req.body;
+    const updatedUser = await updateProfileService(req.user.id, { firstName, lastName, email });
+    return res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      user: updatedUser,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
