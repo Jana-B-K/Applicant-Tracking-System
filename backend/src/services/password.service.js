@@ -3,19 +3,31 @@ import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
 import nodemailer from "nodemailer";
 
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: Number(process.env.EMAIL_PORT) || 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+const hasEmailConfig = () =>
+  Boolean(
+    process.env.EMAIL_HOST &&
+      process.env.EMAIL_PORT &&
+      process.env.EMAIL_USER &&
+      process.env.EMAIL_PASS
+  );
 
 const sendResetEmail = async (toEmail, resetUrl) => {
+  if (!hasEmailConfig()) {
+    throw new Error("Email service is not configured. Set EMAIL_* variables.");
+  }
+
+  const transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST,
+    port: Number(process.env.EMAIL_PORT) || 587,
+    secure: false,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+
   await transporter.sendMail({
-    from: `"Support" <${process.env.EMAIL_FROM}>`,
+    from: `"Support" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
     to: toEmail,
     subject: "Password Reset Request",
     html: `
@@ -60,7 +72,11 @@ export const forgotPasswordService = async (email) => {
   )}`;
 
   if (process.env.NODE_ENV === "production") {
-    await sendResetEmail(user.email, resetUrl);
+    try {
+      await sendResetEmail(user.email, resetUrl);
+    } catch (error) {
+      throw new Error(`Unable to send password reset email: ${error.message}`);
+    }
   } else {
     console.log(`[DEV] Reset link for ${user.email}: ${resetUrl}`);
   }

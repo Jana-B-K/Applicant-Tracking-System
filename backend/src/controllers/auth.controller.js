@@ -74,10 +74,7 @@ export const forgotPassword = async (req, res, next) => {
       ...result,
     });
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Unable to process forgot password request",
-    });
+    return next(error);
   }
 };
 
