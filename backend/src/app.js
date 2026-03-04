@@ -3,6 +3,7 @@ import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import jobRouter from './routes/job.route.js'
 import authRoutes from './routes/auth.route.js'
+import dashboardRoutes from './routes/dashboard.route.js'
 import { setupSwagger } from './swagger.js'
 import { errorHandler } from './middleware/error.middleware.js'
 
@@ -24,6 +25,7 @@ app.use(
       }
       callback(new Error('Not allowed by CORS'))
     },
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true,
   })
 )
@@ -34,6 +36,7 @@ app.use(cookieParser())
 
 app.use('/api/jobs', jobRouter)
 app.use('/api/auth', authRoutes)
+app.use('/api/dashboard', dashboardRoutes)
 setupSwagger(app)
 
 app.use(errorHandler)

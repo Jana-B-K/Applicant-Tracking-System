@@ -17,7 +17,7 @@ export const registerValidator = [
     .withMessage("Last name is required")
     .isLength({ min: 2 })
     .withMessage("Last name must be at least 2 characters")
-    .matches(/^[A-Za-z]+$/)
+    .matches(/^[A-Za-z\s]+$/)
     .withMessage("Last name must contain only letters"),
 
   body("email")
@@ -31,7 +31,7 @@ export const registerValidator = [
   body("password")
     .notEmpty()
     .withMessage("Password is required")
-    .isLength({ min: 6 })
+    .isLength({ min: 8 })
     .withMessage("Password must be at least 6 characters")
     .matches(/[A-Z]/)
     .withMessage("Password must contain at least one uppercase letter")
@@ -42,6 +42,7 @@ export const registerValidator = [
 
 export const loginValidator = [
   body("email")
+    .trim()
     .notEmpty()
     .withMessage("Email is required")
     .isEmail()
@@ -52,12 +53,12 @@ export const loginValidator = [
     .withMessage("Password is required"),
 ];
 
-export const socialLoginValidator = [
-  body("accessToken")
-    .trim()
-    .notEmpty()
-    .withMessage("Access token is required"),
-];
+// export const socialLoginValidator = [
+//   body("accessToken")
+//     .trim()
+//     .notEmpty()
+//     .withMessage("Access token is required"),
+// ];
 
 export const forgotPasswordValidator = [
   body("email")
@@ -82,7 +83,7 @@ export const resetPasswordValidator = [
     .trim()
     .notEmpty()
     .withMessage("Reset token is required")
-    .isLength({ min: 20 })
+    .isLength({ min: 64, max: 64 })
     .withMessage("Invalid reset token"),
 
   body("newPassword")

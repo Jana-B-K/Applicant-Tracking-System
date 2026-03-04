@@ -1,44 +1,65 @@
 import mongoose from "mongoose";
 
-const candidateSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
+const candidateSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 120,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      maxlength: 120,
+      index: true,
+    },
+    contactDetails: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 80,
+    },
+    location: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 120,
+    },
+    skills: {
+      type: [String],
+      required: true,
+      default: [],
+    },
+    experience: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    education: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 150,
+    },
+    noticePeriod: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    referal: {
+      type: String,
+      trim: true,
+      maxlength: 150,
+    },
   },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  contactDetails: {
-    type: String,
-    required: true,
-  },
-  location: {
-    type: String,
-    required: true,
-  },
-  skills: {
-    type: [String],
-    required: true,
-  },
-  experience: {
-    type: Number,
-    required: true,
-  },
-  education: {
-    type: String,
-    required: true,
-  },
-  noticePeriod: {
-    type: Number,
-    required: true,
-  },
-  referal: {
-    type: String,
-    required: false,
-  }
-});
+  { timestamps: true }
+);
+
+candidateSchema.index({ createdAt: 1 });
 
 const Candidate = mongoose.model("Candidate", candidateSchema);
 
