@@ -1,65 +1,103 @@
 import mongoose from "mongoose";
 
+const CANDIDATE_STATUSES = [
+  "Applied",
+  "Screened",
+  "Shortlisted",
+  "Technical Interview 1",
+  "Technical Interview 2",
+  "HR Interview",
+  "Selected",
+  "Rejected",
+];
+
 const candidateSchema = new mongoose.Schema(
   {
     name: {
       type: String,
       required: true,
-      trim: true,
-      maxlength: 120,
+    },
+    jobID: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "JobManagement",
+      required: true,
     },
     email: {
       type: String,
       required: true,
       unique: true,
-      lowercase: true,
-      trim: true,
-      maxlength: 120,
-      index: true,
     },
     contactDetails: {
       type: String,
       required: true,
-      trim: true,
-      maxlength: 80,
     },
     location: {
       type: String,
       required: true,
-      trim: true,
-      maxlength: 120,
     },
     skills: {
       type: [String],
       required: true,
-      default: [],
     },
     experience: {
       type: Number,
       required: true,
-      min: 0,
     },
     education: {
       type: String,
       required: true,
-      trim: true,
-      maxlength: 150,
     },
     noticePeriod: {
       type: Number,
       required: true,
-      min: 0,
     },
     referal: {
       type: String,
-      trim: true,
-      maxlength: 150,
+      required: false,
+    },
+    status: {
+      type: String,
+      enum: CANDIDATE_STATUSES,
+      default: "Applied",
+    },
+    statusHistory: [
+      {
+        status: {
+          type: String,
+          enum: CANDIDATE_STATUSES,
+          required: true,
+        },
+        updatedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+    notes: [
+      {
+        text: {
+          type: String,
+          required: true,
+        },
+        createdAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+    resume: {
+      fileName: String,
+      filePath: String,
+      mimeType: String,
+      uploadedAt: Date,
+    },
+    feedback: {
+      type: String,
+      required: false,
     },
   },
   { timestamps: true }
 );
-
-candidateSchema.index({ createdAt: 1 });
 
 const Candidate = mongoose.model("Candidate", candidateSchema);
 
