@@ -1,8 +1,10 @@
 import connectDB from './src/config/dbconfig.js'
 import dotenv from 'dotenv'
 import app from './src/app.js'
+import { startJobCleanupCron } from './src/cron/jobCleanup.cron.js'
 dotenv.config()
 await connectDB()
+startJobCleanupCron()
 
 const PORT = process.env.PORT || 5000
 

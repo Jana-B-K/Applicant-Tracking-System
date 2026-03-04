@@ -73,6 +73,26 @@ export const deletedJob = async (req, res, next) => {
     }
 }
 
+export const deleteJobsByDate = async (req, res, next) => {
+    try {
+        const { beforeDate } = req.query;
+
+        if (!beforeDate) {
+            return res.status(400).json({ message: 'beforeDate query parameter is required (YYYY-MM-DD or ISO date)' });
+        }
+
+        const parsedDate = new Date(beforeDate);
+        if (Number.isNaN(parsedDate.getTime())) {
+            return res.status(400).json({ message: 'Invalid beforeDate. Use YYYY-MM-DD or ISO date format' });
+        }
+
+        const result = await jobService.deleteJobsByDate(beforeDate);
+        res.status(200).json(result);
+    } catch (error) {
+        next(error);
+    }
+}
+
 export const jobAging = async (req, res, next) => {
     try {
         const agingData = await jobService.jobAging();

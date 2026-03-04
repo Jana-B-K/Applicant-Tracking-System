@@ -7,6 +7,7 @@ jobRouter.post('/', jobController.createJob);
 jobRouter.get('/', jobController.getAllJobs);
 jobRouter.get('/aging', jobController.jobAging);
 jobRouter.get('/counts', jobController.counts);
+jobRouter.delete('/by-date', jobController.deleteJobsByDate);
 jobRouter.get('/:id', jobController.getJobById);
 jobRouter.put('/:id', jobController.updateJob); 
 jobRouter.put('/:id/status', jobController.updateJobStatus);

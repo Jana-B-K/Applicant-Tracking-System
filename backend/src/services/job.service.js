@@ -6,28 +6,46 @@ export const createJob = async (jobData) => {
 }
 
 export const getAllJobs = async () => {
-    const jobs = await JobManagement.find();
+    const jobs = await JobManagement.find({ isDeleted: false });
     return jobs;
 }
 
 export const getJobById = async (jobId) => {
-    const job = await JobManagement.findById(jobId);        
+    const job = await JobManagement.findById(jobId);
     return job;
 }
 
 export const updateJob = async (jobId, jobData) => {
-    const updatedJob = await JobManagement.findByIdAndUpdate(jobId, jobData, { new: true });
+    const updatedJob = await JobManagement.findByIdAndUpdate(jobId, jobData, { returnDocument: 'after' });
     return updatedJob;
 }
 
 export const updateJobStatus = async (jobId, jobStatus) => {
-    const updatedJob = await JobManagement.findByIdAndUpdate(jobId, { jobStatus }, { new: true });
+    const updatedJob = await JobManagement.findByIdAndUpdate(jobId, { jobStatus }, { returnDocument: 'after' });
     return updatedJob;
 }
 
 export const deleteJob = async (jobId) => {
-    const deletedJob = await JobManagement.findByIdAndUpdate(jobId, { isDeleted: true }, { new: true });
+    const deletedJob = await JobManagement.findByIdAndUpdate(jobId, { isDeleted: true }, { returnDocument: 'after' });
     return deletedJob;
+}
+
+export const deleteJobsByDate = async (beforeDate) => {
+    const cutoffDate = new Date(beforeDate);
+
+    const result = await JobManagement.updateMany(
+        {
+            isDeleted: false,
+            targetClosureDate: { $lte: cutoffDate }
+        },
+        { isDeleted: true }
+    );
+
+    return {
+        beforeDate: cutoffDate,
+        matchedCount: result.matchedCount,
+        modifiedCount: result.modifiedCount
+    };
 }
 
 export const jobAging = async () => {

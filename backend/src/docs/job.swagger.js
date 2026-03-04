@@ -116,6 +116,19 @@
  *         filledJobs:
  *           type: number
  *           example: 9
+ *     DeleteJobsByDateResponse:
+ *       type: object
+ *       properties:
+ *         beforeDate:
+ *           type: string
+ *           format: date-time
+ *           example: 2026-03-01T00:00:00.000Z
+ *         matchedCount:
+ *           type: number
+ *           example: 12
+ *         modifiedCount:
+ *           type: number
+ *           example: 12
  *     ErrorResponse:
  *       type: object
  *       properties:
@@ -161,6 +174,42 @@
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/Job'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+
+/**
+ * @swagger
+ * /jobs/by-date:
+ *   delete:
+ *     summary: Soft delete jobs by target closure date
+ *     tags: [Jobs]
+ *     parameters:
+ *       - in: query
+ *         name: beforeDate
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Soft delete jobs where targetClosureDate is less than or equal to this date
+ *         example: 2026-03-01
+ *     responses:
+ *       200:
+ *         description: Jobs marked as deleted by date
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DeleteJobsByDateResponse'
+ *       400:
+ *         description: Invalid or missing date input
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       500:
  *         description: Internal server error
  *         content:
