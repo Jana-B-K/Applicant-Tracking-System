@@ -11,8 +11,8 @@ export const createCandidate = async (req, res) => {
 
 export const getCandidates = async (req, res) => {
   try {
-    const { jobId } = req.query;
-    const candidates = await candidateService.getCandidates(jobId);
+    const { jobId, name, email, status, role } = req.query;
+    const candidates = await candidateService.getCandidates({ jobId, name, email, status, role });
     res.json(candidates);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -39,32 +39,33 @@ export const updateCandidate = async (req, res) => {
   }
 };
 
+// Enhanced with actor tracking
 export const updateCandidateStatus = async (req, res) => {
   try {
-    const { status } = req.body;
+    const { status, comment } = req.body;
     if (!status) {
       return res.status(400).json({ message: 'status is required' });
     }
 
-    const candidate = await candidateService.updateCandidateStatus(req.params.id, status);
-    if (!candidate) return res.status(404).json({ message: 'Candidate not found' });
-    res.json(candidate);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-export const addNoteToCandidate = async (req, res) => {
-  try {
-    const { note } = req.body;
-    if (!note) {
-      return res.status(400).json({ message: 'note is required' });
+    // Assuming you have authentication middleware that adds req.user
+    const updatedByUserId = req.user?._id || req.body.updatedBy;
+    if (!updatedByUserId) {
+      return res.status(401).json({ message: 'User authentication required' });
     }
 
-    const candidate = await candidateService.addNoteToCandidate(req.params.id, note);
+    const candidate = await candidateService.updateCandidateStatus(
+      req.params.id,
+      status,
+      updatedByUserId,
+      comment
+    );
+    
     if (!candidate) return res.status(404).json({ message: 'Candidate not found' });
     res.json(candidate);
   } catch (error) {
+    if (error.message.includes('User not found')) {
+      return res.status(404).json({ message: error.message });
+    }
     res.status(500).json({ message: error.message });
   }
 };
@@ -78,6 +79,106 @@ export const uploadResume = async (req, res) => {
     const candidate = await candidateService.uploadResume(req.params.id, req.file);
     if (!candidate) return res.status(404).json({ message: 'Candidate not found' });
     res.json(candidate);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Enhanced with creator tracking
+export const addInterviewToCandidate = async (req, res) => {
+  try {
+    const { stage, interviewerId, scheduledAt } = req.body;
+    if (!stage || !interviewerId || !scheduledAt) {
+      return res.status(400).json({ 
+        message: 'stage, interviewerId and scheduledAt are required' 
+      });
+    }
+
+    // Get creator from authenticated user
+    const createdByUserId = req.user?._id || req.body.createdBy;
+    if (!createdByUserId) {
+      return res.status(401).json({ message: 'User authentication required' });
+    }
+
+    const candidate = await candidateService.addInterviewToCandidate(
+      req.params.id,
+      req.body,
+      createdByUserId
+    );
+    
+    if (!candidate) return res.status(404).json({ message: 'Candidate not found' });
+    res.json(candidate);
+  } catch (error) {
+    if (
+      error.message.includes('not found') ||
+      error.message.includes('Invalid date format')
+    ) {
+      return res.status(400).json({ message: error.message });
+    }
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Enhanced with updater tracking
+export const updateInterviewForCandidate = async (req, res) => {
+  try {
+    const updatedByUserId = req.user?._id || req.body.updatedBy;
+    if (!updatedByUserId) {
+      return res.status(401).json({ message: 'User authentication required' });
+    }
+
+    const candidate = await candidateService.updateInterviewForCandidate(
+      req.params.id,
+      req.params.interviewId,
+      req.body,
+      updatedByUserId
+    );
+    
+    if (!candidate) {
+      return res.status(404).json({ message: 'Candidate or interview not found' });
+    }
+    res.json(candidate);
+  } catch (error) {
+    if (
+      error.message.includes('No interview fields provided') ||
+      error.message.includes('not found') ||
+      error.message.includes('Invalid date format')
+    ) {
+      return res.status(400).json({ message: error.message });
+    }
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getCandidateInterviews = async (req, res) => {
+  try {
+    const candidate = await candidateService.getCandidateInterviews(req.params.id);
+    if (!candidate) return res.status(404).json({ message: 'Candidate not found' });
+    res.json(candidate);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// New endpoint for timeline
+export const getCandidateTimeline = async (req, res) => {
+  try {
+    const timeline = await candidateService.getCandidateTimeline(req.params.id);
+    res.json(timeline);
+  } catch (error) {
+    if (error.message.includes('not found')) {
+      return res.status(404).json({ message: error.message });
+    }
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// New endpoint for analytics
+export const getInterviewAnalytics = async (req, res) => {
+  try {
+    const { jobId } = req.query;
+    const analytics = await candidateService.getInterviewAnalytics(jobId);
+    res.json(analytics);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

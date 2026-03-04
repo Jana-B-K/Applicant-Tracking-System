@@ -18,12 +18,32 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+// Candidate CRUD
 CandidateRouter.post("/candidates", candidateController.createCandidate);
 CandidateRouter.get("/candidates", candidateController.getCandidates);
 CandidateRouter.get("/candidate/:id", candidateController.getCandidateByID);
 CandidateRouter.put("/candidate/:id", candidateController.updateCandidate);
+
+// Status management
 CandidateRouter.patch("/candidate/:id/status", candidateController.updateCandidateStatus);
-CandidateRouter.post("/candidate/:id/note", candidateController.addNoteToCandidate);
-CandidateRouter.post("/candidate/:id/upload-resume", upload.single("resume"), candidateController.uploadResume);
+
+// Resume upload
+CandidateRouter.post(
+  "/candidate/:id/upload-resume",
+  upload.single("resume"),
+  candidateController.uploadResume
+);
+
+// Interview management
+CandidateRouter.get("/candidate/:id/interviews", candidateController.getCandidateInterviews);
+CandidateRouter.post("/candidate/:id/interview", candidateController.addInterviewToCandidate);
+CandidateRouter.patch(
+  "/candidate/:id/interview/:interviewId",
+  candidateController.updateInterviewForCandidate
+);
+
+// New routes
+CandidateRouter.get("/candidate/:id/timeline", candidateController.getCandidateTimeline);
+CandidateRouter.get("/analytics/interviews", candidateController.getInterviewAnalytics);
 
 export default CandidateRouter;
