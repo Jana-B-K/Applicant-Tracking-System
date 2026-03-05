@@ -1,6 +1,15 @@
 /**
  * @swagger
+ * tags:
+ *   - name: Jobs
+ *     description: Job management APIs
+ *
  * components:
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
  *   schemas:
  *     JobInput:
  *       type: object
@@ -70,6 +79,44 @@
  *             _id:
  *               type: string
  *               example: 65f1c7ea7d85a8f7a70b6abc
+ *             createdAt:
+ *               type: string
+ *               format: date-time
+ *             updatedAt:
+ *               type: string
+ *               format: date-time
+ *
+ *     JobUpdateInput:
+ *       type: object
+ *       properties:
+ *         jobTitle:
+ *           type: string
+ *         description:
+ *           type: string
+ *         skillsRequired:
+ *           type: array
+ *           items:
+ *             type: string
+ *         department:
+ *           type: string
+ *         location:
+ *           type: string
+ *         salaryRange:
+ *           type: string
+ *         emplyementType:
+ *           type: string
+ *         experienceLevel:
+ *           type: string
+ *         hiringManager:
+ *           type: string
+ *         numberOfOpenings:
+ *           type: number
+ *         targetClosureDate:
+ *           type: string
+ *           format: date-time
+ *         jobStatus:
+ *           type: string
+ *           enum: [Open, Closed, On Hold, Cancelled, Filled]
  *     UpdateJobStatusInput:
  *       type: object
  *       required:
@@ -143,6 +190,8 @@
  *   post:
  *     summary: Create a new job
  *     tags: [Jobs]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -162,9 +211,42 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (missing createJobs permission)
  *   get:
- *     summary: Get all jobs
+ *     summary: Get all non-deleted jobs
  *     tags: [Jobs]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: jobTitle
+ *         schema:
+ *           type: string
+ *         description: Case-insensitive partial match on job title
+ *       - in: query
+ *         name: jobStatus
+ *         schema:
+ *           type: string
+ *           enum: [Open, Closed, On Hold, Cancelled, Filled]
+ *       - in: query
+ *         name: department
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: location
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: emplyementType
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: experienceLevel
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
  *         description: List of jobs
@@ -180,6 +262,10 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (missing viewJobs permission)
  */
 
 /**
@@ -188,6 +274,8 @@
  *   delete:
  *     summary: Soft delete jobs by target closure date
  *     tags: [Jobs]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: beforeDate
@@ -216,6 +304,10 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (missing deleteJobs permission)
  */
 
 /**
@@ -224,6 +316,8 @@
  *   get:
  *     summary: Get job by ID
  *     tags: [Jobs]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -249,9 +343,15 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (missing viewJobs permission)
  *   put:
  *     summary: Update job details
  *     tags: [Jobs]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -263,7 +363,7 @@
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/JobInput'
+ *             $ref: '#/components/schemas/JobUpdateInput'
  *     responses:
  *       200:
  *         description: Job updated successfully
@@ -283,9 +383,15 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (missing editJobs permission)
  *   delete:
  *     summary: Soft delete a job
  *     tags: [Jobs]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -311,6 +417,10 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (missing deleteJobs permission)
  */
 
 /**
@@ -319,6 +429,8 @@
  *   put:
  *     summary: Update only job status
  *     tags: [Jobs]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -350,6 +462,10 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (missing editJobs permission)
  */
 
 /**
@@ -358,6 +474,8 @@
  *   get:
  *     summary: Get aging in days (current date - created date) for all non-deleted jobs
  *     tags: [Jobs]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Job aging data
@@ -373,6 +491,10 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (missing viewJobs permission)
  */
 
 /**
@@ -381,6 +503,9 @@
  *   get:
  *     summary: Get counts by job status
  *     tags: [Jobs]
+ *     description: Counts are computed across all jobs (including soft-deleted records).
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Aggregated job counts
@@ -394,4 +519,8 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (missing viewJobs permission)
  */

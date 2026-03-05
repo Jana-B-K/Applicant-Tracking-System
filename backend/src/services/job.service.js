@@ -1,12 +1,31 @@
 import JobManagement from "../models/job.model.js";
+const escapeRegex = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 export const createJob = async (jobData) => {
     const job = await JobManagement.create(jobData);
     return job;
 }
 
-export const getAllJobs = async () => {
-    const jobs = await JobManagement.find({ isDeleted: false });
+export const getAllJobs = async (filters) => {
+    const {
+        jobTitle,
+        department,
+        location,
+        jobStatus,
+        emplyementType,
+        experienceLevel,
+    } = filters;
+
+    const query = { isDeleted: false };
+
+    if (jobTitle) query.jobTitle = { $regex: escapeRegex(jobTitle), $options: "i" };
+    if (department) query.department = { $regex: `^${escapeRegex(department)}$`, $options: "i" };
+    if (location) query.location = { $regex: `^${escapeRegex(location)}$`, $options: "i" };
+    if (jobStatus) query.jobStatus = jobStatus;
+    if (emplyementType) query.emplyementType = { $regex: `^${escapeRegex(emplyementType)}$`, $options: "i" };
+    if (experienceLevel) query.experienceLevel = { $regex: `^${escapeRegex(experienceLevel)}$`, $options: "i" };
+
+    const jobs = await JobManagement.find(query);
     return jobs;
 }
 
