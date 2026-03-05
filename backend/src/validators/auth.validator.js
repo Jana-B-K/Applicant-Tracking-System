@@ -80,19 +80,66 @@ export const resetPasswordValidator = [
     .normalizeEmail(),
 
   body("token")
+    .optional()
     .trim()
-    .notEmpty()
-    .withMessage("Reset token is required")
-    .isLength({ min: 64, max: 64 })
-    .withMessage("Invalid reset token"),
+    .isLength({ min: 6, max: 6 })
+    .withMessage("OTP must be 6 digits")
+    .matches(/^\d{6}$/)
+    .withMessage("OTP must contain only numbers"),
+
+  body("otp")
+    .optional()
+    .trim()
+    .isLength({ min: 6, max: 6 })
+    .withMessage("OTP must be 6 digits")
+    .matches(/^\d{6}$/)
+    .withMessage("OTP must contain only numbers"),
+
+  body()
+    .custom(({ token, otp }) => Boolean(String(token || otp || "").trim()))
+    .withMessage("OTP is required"),
 
   body("newPassword")
     .notEmpty()
     .withMessage("New password is required")
     .isLength({ min: 8 })
     .withMessage("New password must be at least 8 characters")
+    .matches(/[a-z]/)
+    .withMessage("New password must contain at least one lowercase letter")
     .matches(/[A-Z]/)
     .withMessage("New password must contain at least one uppercase letter")
     .matches(/[0-9]/)
-    .withMessage("New password must contain at least one number"),
+    .withMessage("New password must contain at least one number")
+    .matches(/[^A-Za-z0-9]/)
+    .withMessage("New password must contain at least one special character"),
+];
+
+export const verifyResetTokenValidator = [
+  body("email")
+    .trim()
+    .notEmpty()
+    .withMessage("Email is required")
+    .isEmail()
+    .withMessage("Invalid email format")
+    .normalizeEmail(),
+
+  body("token")
+    .optional()
+    .trim()
+    .isLength({ min: 6, max: 6 })
+    .withMessage("OTP must be 6 digits")
+    .matches(/^\d{6}$/)
+    .withMessage("OTP must contain only numbers"),
+
+  body("otp")
+    .optional()
+    .trim()
+    .isLength({ min: 6, max: 6 })
+    .withMessage("OTP must be 6 digits")
+    .matches(/^\d{6}$/)
+    .withMessage("OTP must contain only numbers"),
+
+  body()
+    .custom(({ token, otp }) => Boolean(String(token || otp || "").trim()))
+    .withMessage("OTP is required"),
 ];

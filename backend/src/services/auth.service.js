@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import crypto from "node:crypto";
 import { generateAccessToken, generateRefreshToken} from "../utils/token.js";
+import { getRolePermissionsService } from "./rbac.service.js";
 
 export const registerService = async ({ firstName, lastName, email, password }) => {
   const existingUser = await User.findOne({ email });
@@ -46,6 +47,7 @@ export const loginService = async ({ email, password }) => {
 
   user.refreshToken = refreshToken;
   await user.save();
+  const permissions = await getRolePermissionsService(user.role);
 
   return {
     accessToken,
@@ -55,6 +57,8 @@ export const loginService = async ({ email, password }) => {
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
+      role: user.role,
+      permissions,
     },
   };
 };
@@ -88,40 +92,85 @@ export const refreshAccessTokenService = async (refreshToken) => {
   };
 };
 
-const createRandomPasswordHash = async () => {
-  const randomPassword = crypto.randomBytes(32).toString("hex");
-  return bcrypt.hash(randomPassword, 10);
-};
-
-export const socialLoginService = async ({ provider, accessToken }) => {
-  const profile = await getSocialProfile({ provider, accessToken });
-
-  let user = await User.findOne({ email: profile.email });
+export const updateProfileService = async (userId, { firstName, lastName, email }) => {
+  const user = await User.findById(userId); 
 
   if (!user) {
-    const hashedPassword = await createRandomPasswordHash();
-    user = await User.create({
-      firstName: profile.firstName,
-      lastName: profile.lastName,
-      email: profile.email,
-      password: hashedPassword,
-    });
+    throw new Error("User not found");
   }
 
-  const accessJwtToken = generateAccessToken(user._id);
-  const refreshJwtToken = generateRefreshToken(user._id);
+  if (email && email !== user.email) {
+    const existingUser = await User.findOne({ email }); 
+    if (existingUser) {
+      throw new Error("Email already in use");
+    }
+  }
 
-  user.refreshToken = refreshJwtToken;
+  user.firstName = firstName || user.firstName;
+  user.lastName = lastName || user.lastName;
+  user.email = email || user.email;
+
   await user.save();
 
   return {
-    accessToken: accessJwtToken,
-    refreshToken: refreshJwtToken,
-    user: {
-      id: user._id,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-    },
+    id: user._id,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    email: user.email,
   };
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// const createRandomPasswordHash = async () => {
+//   const randomPassword = crypto.randomBytes(32).toString("hex");
+//   return bcrypt.hash(randomPassword, 10);
+// };
+
+// export const socialLoginService = async ({ provider, accessToken }) => {
+//   const profile = await getSocialProfile({ provider, accessToken });
+
+//   let user = await User.findOne({ email: profile.email });
+
+//   if (!user) {
+//     const hashedPassword = await createRandomPasswordHash();
+//     user = await User.create({
+//       firstName: profile.firstName,
+//       lastName: profile.lastName,
+//       email: profile.email,
+//       password: hashedPassword,
+//     });
+//   }
+
+//   const accessJwtToken = generateAccessToken(user._id);
+//   const refreshJwtToken = generateRefreshToken(user._id);
+
+//   user.refreshToken = refreshJwtToken;
+//   await user.save();
+
+//   return {
+//     accessToken: accessJwtToken,
+//     refreshToken: refreshJwtToken,
+//     user: {
+//       id: user._id,
+//       firstName: user.firstName,
+//       lastName: user.lastName,
+//       email: user.email,
+//     },
+//   };
+// };

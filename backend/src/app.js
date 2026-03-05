@@ -5,6 +5,7 @@ import jobRouter from './routes/job.route.js'
 import authRoutes from './routes/auth.route.js'
 import dashboardRoutes from './routes/dashboard.route.js'
 import candidateRouter from './routes/candidate.route.js' 
+import rbacRoutes from './routes/rbac.route.js'
 import { setupSwagger } from './swagger.js'
 import { errorHandler } from './middleware/error.middleware.js'
 
@@ -12,7 +13,7 @@ const app = express()
 
 const defaultAllowedOrigins = [
   'http://localhost:5173',
-  'http://127.0.0.1:5173',
+  'http://10.4.0.81:5173',
   'http://localhost:5174',
   'http://127.0.0.1:5174',
 ]
@@ -47,6 +48,8 @@ app.use('/api/auth', authRoutes)
 app.use('/api/dashboard', dashboardRoutes)
 app.use('/uploads', express.static('uploads'))
 app.use('/api', candidateRouter)
+app.use('/api/rbac', rbacRoutes)
+
 setupSwagger(app)
 
 app.use(errorHandler)
