@@ -15,4 +15,5 @@ router.post('/verify-reset-token', verifyResetTokenValidator, validate, verifyRe
 router.post('/reset-password', resetPasswordValidator, validate, resetPassword)
 router.get('/me', protect, me)
 router.put('/update',protect,updateProfile)
+
 export default router

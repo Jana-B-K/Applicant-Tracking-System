@@ -50,7 +50,6 @@ export const loginService = async ({ email, password }) => {
   user.refreshToken = refreshToken;
   await user.save();
   const permissions = await getRolePermissionsService(user.role);
-
   return {
     accessToken,
     refreshToken,
