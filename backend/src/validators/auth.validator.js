@@ -37,6 +37,13 @@ export const registerValidator = [
     .withMessage("Password must contain at least one uppercase letter")
     .matches(/[0-9]/)
     .withMessage("Password must contain at least one number"),
+
+  body("role")
+    .trim()
+    .notEmpty()
+    .withMessage("Role is required")
+    .isIn(["superadmin", "hrrecruiter", "hiringmanager", "interviewpanel", "management"])
+    .withMessage("Invalid role"),
 ];
 
 

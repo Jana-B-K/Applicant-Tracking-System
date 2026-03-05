@@ -3,7 +3,17 @@ import Candidate from "../models/candidate.model.js";
 import Application from "../models/application.model.js";
 
 const MS_IN_DAY = 24 * 60 * 60 * 1000;
-const STAGE_ORDER = ["applied", "screening", "interview", "offered", "hired", "rejected"];
+
+const STAGE_ORDER = [
+  "applied",
+  "screened",
+  "shortlisted",
+  "technical intv 1",
+  "technical intv 2",
+  "hr round",
+  "rejected",
+  "selected",
+];
 
 const clampWeeks = (value) => {
   const parsed = Number.parseInt(value, 10);
@@ -60,16 +70,26 @@ export const getDashboardSummary = async () => {
   };
 };
 
+
+ 
 export const getHiringFunnel = async () => {
   const stageCounts = await Application.aggregate([
     {
+      $project: {
+       normalizedStage: {
+          $toLower: {
+            $trim: { input: { $ifNull: ["$stage", ""] } },
+          },
+        },
+      },
+    },
+    {
       $group: {
-        _id: "$stage",
+        _id: "$normalizedStage",
         count: { $sum: 1 },
       },
     },
   ]);
-
   const countByStage = new Map(stageCounts.map((item) => [item._id, item.count]));
 
   return STAGE_ORDER.map((stage) => ({
@@ -77,6 +97,7 @@ export const getHiringFunnel = async () => {
     count: countByStage.get(stage) || 0,
   }));
 };
+ 
 
 export const getWeeklyHiringStats = async (weeksInput) => {
   const weeks = clampWeeks(weeksInput);
@@ -158,6 +179,7 @@ export const getWeeklyHiringStats = async (weeksInput) => {
   }
 
   return points;
+<<<<<<< HEAD
 };
 
 const clampPositiveInt = (value, fallback, min, max) => {
@@ -238,3 +260,6 @@ export const getHiringAlerts = async ({
     candidateStageTransitions,
   };
 };
+=======
+};
+>>>>>>> fbc49e3 (register auth updated)

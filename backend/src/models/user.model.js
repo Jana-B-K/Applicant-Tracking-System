@@ -25,7 +25,8 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['superadmin', 'hrrecruiter', 'hiringmanager','interviewpanel','management']
+    enum: ['superadmin', 'hrrecruiter', 'hiringmanager','interviewpanel','management'],
+    required: true
   },
   refreshToken: {
     type: String,

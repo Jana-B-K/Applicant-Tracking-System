@@ -122,10 +122,9 @@ const verifyOtpForUser = async ({ user, otp }) => {
 export const forgotPasswordService = async (email) => {
   const normalizedEmail = normalizeEmail(email);
   const user = await User.findOne({ email: normalizedEmail });
-
   if (!user) {
     return {
-      message: "If an account with this email exists, an OTP has been sent.",
+      message: normalizedEmail,
     };
   }
 
@@ -135,7 +134,7 @@ export const forgotPasswordService = async (email) => {
     const cooldownMs = OTP_RESEND_COOLDOWN_SECONDS * 1000;
     if (elapsedMs < cooldownMs) {
       return {
-        message: "If an account with this email exists, an OTP has been sent.",
+        message: "If an account with this email exists, an OTP has been sent.".concat(normalizedEmail),
       };
     }
   }
@@ -168,7 +167,7 @@ export const forgotPasswordService = async (email) => {
   }
 
   const response = {
-    message: "If an account with this email exists, an OTP has been sent.",
+    message: "If an account with this email exists, an OTP has been sent.".concat(normalizedEmail),
   };
 
   if (!isProduction) {

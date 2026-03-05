@@ -126,7 +126,7 @@ export const me = async (req, res, next) => {
 export const updateProfile = async (req, res, next) => {
   try {
     const { firstName, lastName, email } = req.body;
-    const updatedUser = await updateProfileService(req.user.id, { firstName, lastName, email });
+    const updatedUser = await updateProfileService(req.user.id, { firstName, lastName, email, role: req.user.role });
     return res.status(200).json({
       success: true,
       message: "Profile updated successfully",

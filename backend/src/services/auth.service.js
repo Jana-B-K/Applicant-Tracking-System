@@ -5,7 +5,7 @@ import crypto from "node:crypto";
 import { generateAccessToken, generateRefreshToken} from "../utils/token.js";
 import { getRolePermissionsService } from "./rbac.service.js";
 
-export const registerService = async ({ firstName, lastName, email, password }) => {
+export const registerService = async ({ firstName, lastName, email, password, role }) => {
   const existingUser = await User.findOne({ email });
 
   if (existingUser) {
@@ -18,6 +18,7 @@ export const registerService = async ({ firstName, lastName, email, password }) 
     firstName,
     lastName,
     email,
+    role,
     password: hashedPassword,
   });
 
@@ -26,6 +27,7 @@ export const registerService = async ({ firstName, lastName, email, password }) 
     firstName: user.firstName,
     lastName: user.lastName,
     email: user.email,
+    role: user.role,
   };
 };
 
