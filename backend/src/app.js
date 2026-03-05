@@ -6,6 +6,7 @@ import authRoutes from './routes/auth.route.js'
 import dashboardRoutes from './routes/dashboard.route.js'
 import candidateRouter from './routes/candidate.route.js' 
 import rbacRoutes from './routes/rbac.route.js'
+import userRoutes from './routes/user.route.js'
 import { setupSwagger } from './swagger.js'
 import { errorHandler } from './middleware/error.middleware.js'
 
@@ -49,6 +50,7 @@ app.use('/api/dashboard', dashboardRoutes)
 app.use('/uploads', express.static('uploads'))
 app.use('/api', candidateRouter)
 app.use('/api/rbac', rbacRoutes)
+app.use('/api/users', userRoutes)
 
 setupSwagger(app)
 

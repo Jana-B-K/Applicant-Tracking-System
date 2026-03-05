@@ -3,6 +3,7 @@ import express from "express";
 import multer from "multer";
 import fs from "fs";
 import path from "path";
+import { protect, requirePermission } from "../middleware/auth.middleware.js";
 
 const CandidateRouter = express.Router();
 const resumeUploadDir = path.join(process.cwd(), "uploads", "resumes");
@@ -19,31 +20,35 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // Candidate CRUD
-CandidateRouter.post("/candidates", candidateController.createCandidate);
-CandidateRouter.get("/candidates", candidateController.getCandidates);
-CandidateRouter.get("/candidate/:id", candidateController.getCandidateByID);
-CandidateRouter.put("/candidate/:id", candidateController.updateCandidate);
+CandidateRouter.post("/candidates", protect, requirePermission("addCandidates"), candidateController.createCandidate);
+CandidateRouter.get("/candidates", protect, requirePermission("viewCandidates"), candidateController.getCandidates);
+CandidateRouter.get("/candidate/:id", protect, requirePermission("viewCandidates"), candidateController.getCandidateByID);
+CandidateRouter.put("/candidate/:id", protect, requirePermission("editCandidates"), candidateController.updateCandidate);
 
 // Status management
-CandidateRouter.patch("/candidate/:id/status", candidateController.updateCandidateStatus);
+CandidateRouter.patch("/candidate/:id/status", protect, requirePermission("manageCandidateStages"), candidateController.updateCandidateStatus);
 
 // Resume upload
 CandidateRouter.post(
   "/candidate/:id/upload-resume",
+  protect,
+  requirePermission("editCandidates"),
   upload.single("resume"),
   candidateController.uploadResume
 );
 
 // Interview management
-CandidateRouter.get("/candidate/:id/interviews", candidateController.getCandidateInterviews);
-CandidateRouter.post("/candidate/:id/interview", candidateController.addInterviewToCandidate);
+CandidateRouter.get("/candidate/:id/interviews", protect, requirePermission("viewCandidates"), candidateController.getCandidateInterviews);
+CandidateRouter.post("/candidate/:id/interview", protect, requirePermission("manageCandidateStages"), candidateController.addInterviewToCandidate);
 CandidateRouter.patch(
   "/candidate/:id/interview/:interviewId",
+  protect,
+  requirePermission("manageCandidateStages"),
   candidateController.updateInterviewForCandidate
 );
 
 // New routes
-CandidateRouter.get("/candidate/:id/timeline", candidateController.getCandidateTimeline);
-CandidateRouter.get("/analytics/interviews", candidateController.getInterviewAnalytics);
+CandidateRouter.get("/candidate/:id/timeline", protect, requirePermission("viewCandidates"), candidateController.getCandidateTimeline);
+CandidateRouter.get("/analytics/interviews", protect, requirePermission("viewCandidates"), candidateController.getInterviewAnalytics);
 
 export default CandidateRouter;

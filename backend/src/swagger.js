@@ -5,9 +5,18 @@ const options = {
   definition: {
     openapi: "3.0.0",
     info: {
-      title: "Job Management API",
+      title: "Applicant Tracking API",
       version: "1.0.0",
-      description: "API documentation for Job Management System",
+      description: "API documentation for Applicant Tracking System",
+    },
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
+      },
     },
     servers: [
       {

@@ -381,6 +381,8 @@
  *   post:
  *     summary: Create a new candidate
  *     tags: [Candidates]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -403,6 +405,8 @@
  *   get:
  *     summary: Get candidates with optional filters
  *     tags: [Candidates]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: jobId
@@ -447,6 +451,8 @@
  *   get:
  *     summary: Get candidate by ID
  *     tags: [Candidates]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -475,6 +481,8 @@
  *   put:
  *     summary: Update candidate details
  *     tags: [Candidates]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -514,6 +522,8 @@
  *   patch:
  *     summary: Update candidate status with actor tracking
  *     tags: [Candidates]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -565,6 +575,8 @@
  *   post:
  *     summary: Upload candidate resume
  *     tags: [Candidates]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -616,6 +628,8 @@
  *   get:
  *     summary: Get all interview rounds for one candidate
  *     tags: [Candidates]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -649,6 +663,8 @@
  *   post:
  *     summary: Schedule a new interview round
  *     tags: [Candidates]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -694,6 +710,8 @@
  *   patch:
  *     summary: Update interview result/feedback/details
  *     tags: [Candidates]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -744,6 +762,8 @@
  *   get:
  *     summary: Get candidate timeline (status + interviews merged)
  *     tags: [Candidates]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -777,6 +797,8 @@
  *   get:
  *     summary: Get interview analytics (optionally filtered by jobId)
  *     tags: [Candidates]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: jobId

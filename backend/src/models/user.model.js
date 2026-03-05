@@ -28,6 +28,10 @@ const userSchema = new mongoose.Schema({
     enum: ['superadmin', 'hrrecruiter', 'hiringmanager','interviewpanel','management'],
     required: true
   },
+  isActive: {
+    type: Boolean,
+    default: true
+  },
   refreshToken: {
     type: String,
   },

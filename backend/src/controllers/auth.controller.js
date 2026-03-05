@@ -2,8 +2,8 @@ import {
   registerService,
   loginService,
   refreshAccessTokenService,
-  updateProfileService,
 } from "../services/auth.service.js";
+import { updateProfileService } from "../services/user.service.js";
 import {
   forgotPasswordService,
   resetPasswordService,
@@ -126,7 +126,7 @@ export const me = async (req, res, next) => {
 export const updateProfile = async (req, res, next) => {
   try {
     const { firstName, lastName, email } = req.body;
-    const updatedUser = await updateProfileService(req.user.id, { firstName, lastName, email, role: req.user.role });
+    const updatedUser = await updateProfileService(req.user.id, { firstName, lastName, email });
     return res.status(200).json({
       success: true,
       message: "Profile updated successfully",
@@ -136,4 +136,3 @@ export const updateProfile = async (req, res, next) => {
     next(error);
   }
 };
-

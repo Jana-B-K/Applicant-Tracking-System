@@ -94,51 +94,6 @@ export const refreshAccessTokenService = async (refreshToken) => {
   };
 };
 
-export const updateProfileService = async (userId, { firstName, lastName, email }) => {
-  const user = await User.findById(userId); 
-
-  if (!user) {
-    throw new Error("User not found");
-  }
-
-  if (email && email !== user.email) {
-    const existingUser = await User.findOne({ email }); 
-    if (existingUser) {
-      throw new Error("Email already in use");
-    }
-  }
-
-  user.firstName = firstName || user.firstName;
-  user.lastName = lastName || user.lastName;
-  user.email = email || user.email;
-
-  await user.save();
-
-  return {
-    id: user._id,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    email: user.email,
-  };
-};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // const createRandomPasswordHash = async () => {
 //   const randomPassword = crypto.randomBytes(32).toString("hex");
 //   return bcrypt.hash(randomPassword, 10);
