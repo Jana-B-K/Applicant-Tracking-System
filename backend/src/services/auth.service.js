@@ -3,9 +3,9 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import crypto from "node:crypto";
 import { generateAccessToken, generateRefreshToken} from "../utils/token.js";
-import { getRolePermissionsService } from "./rbac.service.js";
+import { buildRoleDiffOverridesService, resolveUserPermissionsService } from "./rbac.service.js";
 
-export const registerService = async ({ firstName, lastName, email, password, role }) => {
+export const registerService = async ({ firstName, lastName, email, password, role, permissions }) => {
   const existingUser = await User.findOne({ email });
 
   if (existingUser) {
@@ -14,12 +14,23 @@ export const registerService = async ({ firstName, lastName, email, password, ro
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
+  const permissionOverrides = await buildRoleDiffOverridesService({
+    role,
+    permissions,
+  });
+
   const user = await User.create({
     firstName,
     lastName,
     email,
     role,
+    permissions: permissionOverrides,
     password: hashedPassword,
+  });
+
+  const effectivePermissions = await resolveUserPermissionsService({
+    role: user.role,
+    permissions: user.permissions,
   });
 
   return {
@@ -28,6 +39,8 @@ export const registerService = async ({ firstName, lastName, email, password, ro
     lastName: user.lastName,
     email: user.email,
     role: user.role,
+    assignedPermissions: user.permissions || {},
+    permissions: effectivePermissions,
   };
 };
 
@@ -38,7 +51,20 @@ export const loginService = async ({ email, password }) => {
     throw new Error("Invalid email or password");
   }
 
-  const isMatch = await bcrypt.compare(password, user.password);
+  if (!user.isActive) {
+    throw new Error("Your account is inactive");
+  }
+
+  if (!user.password || typeof user.password !== "string") {
+    throw new Error("Invalid email or password");
+  }
+
+  let isMatch = false;
+  try {
+    isMatch = await bcrypt.compare(password, user.password);
+  } catch (error) {
+    throw new Error("Invalid email or password");
+  }
 
   if (!isMatch) {
     throw new Error("Invalid email or password");
@@ -47,9 +73,14 @@ export const loginService = async ({ email, password }) => {
   const accessToken = generateAccessToken(user._id);
   const refreshToken = generateRefreshToken(user._id);
 
-  user.refreshToken = refreshToken;
-  await user.save();
-  const permissions = await getRolePermissionsService(user.role);
+  await User.updateOne(
+    { _id: user._id },
+    { $set: { refreshToken } }
+  );
+  const permissions = await resolveUserPermissionsService({
+    role: user.role,
+    permissions: user.permissions,
+  });
 
   return {
     accessToken,
@@ -60,6 +91,7 @@ export const loginService = async ({ email, password }) => {
       lastName: user.lastName,
       email: user.email,
       role: user.role,
+      assignedPermissions: user.permissions || {},
       permissions,
     },
   };

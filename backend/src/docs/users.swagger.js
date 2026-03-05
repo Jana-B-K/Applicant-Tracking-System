@@ -17,9 +17,34 @@
  *         role:
  *           type: string
  *           enum: [superadmin, hrrecruiter, hiringmanager, interviewpanel, management]
+ *         assignedPermissions:
+ *           type: object
+ *           additionalProperties:
+ *             type: boolean
+ *         permissions:
+ *           type: object
+ *           additionalProperties:
+ *             type: boolean
  *         isActive: { type: boolean }
  *         createdAt: { type: string, format: date-time }
  *         updatedAt: { type: string, format: date-time }
+ *     CreateUserInput:
+ *       type: object
+ *       required: [firstName, lastName, email, password, role]
+ *       properties:
+ *         firstName: { type: string }
+ *         lastName: { type: string }
+ *         email: { type: string, format: email }
+ *         password: { type: string, example: Passw0rd! }
+ *         empId: { type: string }
+ *         role:
+ *           type: string
+ *           enum: [superadmin, hrrecruiter, hiringmanager, interviewpanel, management]
+ *         isActive: { type: boolean }
+ *         permissions:
+ *           type: object
+ *           additionalProperties:
+ *             type: boolean
  *     UpdateUserInput:
  *       type: object
  *       properties:
@@ -31,11 +56,31 @@
  *           type: string
  *           enum: [superadmin, hrrecruiter, hiringmanager, interviewpanel, management]
  *         isActive: { type: boolean }
+ *         permissions:
+ *           type: object
+ *           additionalProperties:
+ *             type: boolean
  */
 
 /**
  * @swagger
  * /users:
+ *   post:
+ *     tags: [Users]
+ *     summary: Create user (superadmin only)
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateUserInput'
+ *     responses:
+ *       201: { description: User created }
+ *       400: { description: Validation error }
+ *       401: { description: Unauthorized }
+ *       403: { description: Forbidden (superadmin only) }
  *   get:
  *     tags: [Users]
  *     summary: Get users list

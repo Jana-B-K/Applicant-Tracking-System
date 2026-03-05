@@ -1,5 +1,18 @@
 import { body } from "express-validator";
 
+const PERMISSION_KEYS = [
+  "viewDashboard",
+  "viewJobs",
+  "createJobs",
+  "editJobs",
+  "deleteJobs",
+  "viewCandidates",
+  "addCandidates",
+  "editCandidates",
+  "manageCandidateStages",
+  "manageUsers",
+];
+
 export const registerValidator = [
 
   body("firstName")
@@ -44,6 +57,24 @@ export const registerValidator = [
     .withMessage("Role is required")
     .isIn(["superadmin", "hrrecruiter", "hiringmanager", "interviewpanel", "management"])
     .withMessage("Invalid role"),
+
+  body("permissions")
+    .optional()
+    .custom((value) => {
+      if (!value || typeof value !== "object" || Array.isArray(value)) {
+        throw new Error("permissions must be an object");
+      }
+
+      for (const key of Object.keys(value)) {
+        if (!PERMISSION_KEYS.includes(key)) {
+          throw new Error(`Invalid permission key: ${key}`);
+        }
+        if (typeof value[key] !== "boolean") {
+          throw new Error(`Permission '${key}' must be boolean`);
+        }
+      }
+      return true;
+    }),
 ];
 
 

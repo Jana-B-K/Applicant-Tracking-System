@@ -49,6 +49,13 @@ export const login = async (req, res, next) => {
     });
 
   } catch (error) {
+    if (["Invalid email or password", "Your account is inactive"].includes(error.message)) {
+      return res.status(401).json({
+        success: false,
+        message: error.message,
+      });
+    }
+    console.error("Login error:", error);
     next(error);
   }
 };
@@ -65,6 +72,12 @@ export const refreshToken = async (req, res, next) => {
     });
 
   } catch (error) {
+    if (["Refresh token required", "Invalid or expired refresh token", "Invalid refresh token"].includes(error.message)) {
+      return res.status(401).json({
+        success: false,
+        message: error.message,
+      });
+    }
     next(error);
   }
 };

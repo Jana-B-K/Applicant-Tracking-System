@@ -17,6 +17,10 @@
  *         role:
  *           type: string
  *           enum: [superadmin, hrrecruiter, hiringmanager, interviewpanel, management]
+ *         permissions:
+ *           type: object
+ *           additionalProperties:
+ *             type: boolean
  *     LoginInput:
  *       type: object
  *       required: [email, password]
@@ -36,7 +40,9 @@
  * /auth/register:
  *   post:
  *     tags: [Auth]
- *     summary: Register a new user
+ *     summary: Create a new user (superadmin only)
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
