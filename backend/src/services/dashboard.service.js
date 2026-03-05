@@ -179,7 +179,6 @@ export const getWeeklyHiringStats = async (weeksInput) => {
   }
 
   return points;
-<<<<<<< HEAD
 };
 
 const clampPositiveInt = (value, fallback, min, max) => {
@@ -260,6 +259,4 @@ export const getHiringAlerts = async ({
     candidateStageTransitions,
   };
 };
-=======
-};
->>>>>>> fbc49e3 (register auth updated)
+
