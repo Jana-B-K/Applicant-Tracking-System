@@ -32,7 +32,7 @@
  *     responses:
  *       200: { description: RBAC policy }
  *       401: { description: Unauthorized }
- *       403: { description: Forbidden (missing manageUsers permission) }
+ *       403: { description: Forbidden (superadmin only) }
  *   put:
  *     tags: [RBAC]
  *     summary: Update RBAC permission matrix (partial updates supported)
@@ -48,7 +48,7 @@
  *       200: { description: Policy updated }
  *       400: { description: Validation error }
  *       401: { description: Unauthorized }
- *       403: { description: Forbidden (missing manageUsers permission) }
+ *       403: { description: Forbidden (superadmin only) }
  */
 
 /**
@@ -62,5 +62,5 @@
  *     responses:
  *       200: { description: Policy reset }
  *       401: { description: Unauthorized }
- *       403: { description: Forbidden (missing manageUsers permission) }
+ *       403: { description: Forbidden (superadmin only) }
  */

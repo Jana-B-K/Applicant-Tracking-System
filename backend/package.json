@@ -5,7 +5,9 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon server.js"
+    "start": "nodemon server.js",
+    "seed": "node src/seeds/seed.js",
+    "seed:reset": "node src/seeds/seed.js --reset"
   },
   "keywords": [],
   "author": "",

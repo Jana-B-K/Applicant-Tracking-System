@@ -1,9 +1,30 @@
 import {
+  createUserService,
   deleteUserService,
   getUserByIdService,
   getUsersService,
   updateUserByIdService,
 } from "../services/user.service.js";
+
+export const createUser = async (req, res, next) => {
+  try {
+    const user = await createUserService(req.body);
+    return res.status(201).json({
+      success: true,
+      message: "User created successfully",
+      data: user,
+    });
+  } catch (error) {
+    if (
+      ["User already exists", "Email already in use", "Employee ID already in use", "permissions must be an object"].includes(error.message) ||
+      error.message.startsWith("Invalid permission key:") ||
+      error.message.startsWith("Permission '")
+    ) {
+      return res.status(400).json({ success: false, message: error.message });
+    }
+    return next(error);
+  }
+};
 
 export const getUsers = async (req, res, next) => {
   try {
@@ -38,7 +59,11 @@ export const updateUserById = async (req, res, next) => {
     if (error.message === "User not found") {
       return res.status(404).json({ success: false, message: error.message });
     }
-    if (error.message === "Email already in use") {
+    if (
+      ["Email already in use", "Employee ID already in use", "permissions must be an object"].includes(error.message) ||
+      error.message.startsWith("Invalid permission key:") ||
+      error.message.startsWith("Permission '")
+    ) {
       return res.status(400).json({ success: false, message: error.message });
     }
     return next(error);

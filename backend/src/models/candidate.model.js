@@ -270,7 +270,6 @@ const candidateSchema = new mongoose.Schema(
 
 // Indexes for performance
 candidateSchema.index({ jobID: 1, status: 1, role: 1 });
-candidateSchema.index({ email: 1 });
 candidateSchema.index({ "interviews.scheduledAt": 1 });
 candidateSchema.index({ "interviews.interviewer.id": 1 });
 candidateSchema.index({ "interviews.result": 1 });

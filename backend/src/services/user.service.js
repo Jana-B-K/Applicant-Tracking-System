@@ -1,4 +1,6 @@
 import User from "../models/user.model.js";
+import bcrypt from "bcryptjs";
+import { buildRoleDiffOverridesService, resolveUserPermissionsService } from "./rbac.service.js";
 
 const USER_SAFE_SELECT = "-password -refreshToken -passwordResetTokenHash -passwordResetTokenExpiresAt -passwordResetOtpAttempts -passwordResetLastSentAt";
 
@@ -9,10 +11,56 @@ const toUserResponse = (user) => ({
   email: user.email,
   empId: user.empId,
   role: user.role,
+  assignedPermissions: user.permissions || {},
   isActive: user.isActive,
   createdAt: user.createdAt,
   updatedAt: user.updatedAt,
 });
+
+const withEffectivePermissions = async (user) => {
+  const permissions = await resolveUserPermissionsService({
+    role: user.role,
+    permissions: user.permissions,
+  });
+
+  return {
+    ...toUserResponse(user),
+    permissions,
+  };
+};
+
+export const createUserService = async ({ firstName, lastName, email, password, role, empId, isActive, permissions }) => {
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    throw new Error("User already exists");
+  }
+
+  if (empId) {
+    const existingEmpId = await User.findOne({ empId });
+    if (existingEmpId) {
+      throw new Error("Employee ID already in use");
+    }
+  }
+
+  const permissionOverrides = await buildRoleDiffOverridesService({
+    role,
+    permissions,
+  });
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const user = await User.create({
+    firstName,
+    lastName,
+    email,
+    password: hashedPassword,
+    role,
+    empId,
+    isActive: typeof isActive === "boolean" ? isActive : true,
+    permissions: permissionOverrides,
+  });
+
+  return withEffectivePermissions(user);
+};
 
 export const updateProfileService = async (userId, { firstName, lastName, email }) => {
   const user = await User.findById(userId);
@@ -58,7 +106,7 @@ export const getUsersService = async ({ role, isActive, search }) => {
   }
 
   const users = await User.find(query).select(USER_SAFE_SELECT).sort({ createdAt: -1 });
-  return users.map(toUserResponse);
+  return Promise.all(users.map(withEffectivePermissions));
 };
 
 export const getUserByIdService = async (userId) => {
@@ -68,7 +116,7 @@ export const getUserByIdService = async (userId) => {
     throw new Error("User not found");
   }
 
-  return toUserResponse(user);
+  return withEffectivePermissions(user);
 };
 
 export const updateUserByIdService = async (userId, payload) => {
@@ -85,6 +133,16 @@ export const updateUserByIdService = async (userId, payload) => {
     }
   }
 
+  if (payload.empId && payload.empId !== user.empId) {
+    const existingEmpId = await User.findOne({ empId: payload.empId });
+    if (existingEmpId && String(existingEmpId._id) !== String(user._id)) {
+      throw new Error("Employee ID already in use");
+    }
+  }
+
+  const targetRole = typeof payload.role !== "undefined" ? payload.role : user.role;
+  const isRoleChanged = typeof payload.role !== "undefined" && payload.role !== user.role;
+
   const allowedFields = ["firstName", "lastName", "email", "empId", "role", "isActive"];
 
   for (const key of allowedFields) {
@@ -93,8 +151,18 @@ export const updateUserByIdService = async (userId, payload) => {
     }
   }
 
+  if (typeof payload.permissions !== "undefined") {
+    user.permissions = await buildRoleDiffOverridesService({
+      role: targetRole,
+      permissions: payload.permissions,
+    });
+  } else if (isRoleChanged) {
+    // On role change, reset user-specific overrides to inherit new role defaults.
+    user.permissions = {};
+  }
+
   await user.save();
-  return toUserResponse(user);
+  return withEffectivePermissions(user);
 };
 
 export const deleteUserService = async (userId) => {
@@ -104,5 +172,5 @@ export const deleteUserService = async (userId) => {
     throw new Error("User not found");
   }
 
-  return toUserResponse(user);
+  return withEffectivePermissions(user);
 };

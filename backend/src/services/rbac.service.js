@@ -179,3 +179,68 @@ export const getRolePermissionsService = async (role) => {
 
   return rolePermissions;
 };
+
+const toPlainPermissionObject = (permissions) => {
+  if (permissions && typeof permissions.toObject === "function") {
+    return permissions.toObject();
+  }
+  return permissions;
+};
+
+export const normalizePermissionOverrides = (permissions = {}, options = {}) => {
+  const { strict = true } = options;
+  const rawPermissions = toPlainPermissionObject(permissions);
+
+  if (rawPermissions === null || typeof rawPermissions === "undefined") {
+    return {};
+  }
+
+  if (typeof rawPermissions !== "object" || Array.isArray(rawPermissions)) {
+    throw new Error("permissions must be an object");
+  }
+
+  const normalized = {};
+  for (const key of Object.keys(rawPermissions)) {
+    if (!PERMISSION_KEYS.includes(key)) {
+      if (strict) {
+        throw new Error(`Invalid permission key: ${key}`);
+      }
+      continue;
+    }
+
+    if (typeof rawPermissions[key] !== "boolean") {
+      if (strict) {
+        throw new Error(`Permission '${key}' must be boolean`);
+      }
+      continue;
+    }
+
+    normalized[key] = rawPermissions[key];
+  }
+
+  return normalized;
+};
+
+export const resolveUserPermissionsService = async ({ role, permissions = {} }) => {
+  const rolePermissions = await getRolePermissionsService(role);
+  const overrides = normalizePermissionOverrides(permissions, { strict: false });
+
+  return {
+    ...rolePermissions,
+    ...overrides,
+  };
+};
+
+export const buildRoleDiffOverridesService = async ({ role, permissions = {} }) => {
+  const requested = normalizePermissionOverrides(permissions);
+  const rolePermissions = await getRolePermissionsService(role);
+  const overrides = {};
+
+  for (const key of Object.keys(requested)) {
+    if (requested[key] !== rolePermissions[key]) {
+      overrides[key] = requested[key];
+    }
+  }
+
+  return overrides;
+};

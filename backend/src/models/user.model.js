@@ -1,5 +1,26 @@
 import mongoose from 'mongoose';
 
+const PERMISSION_KEYS = [
+  "viewDashboard",
+  "viewJobs",
+  "createJobs",
+  "editJobs",
+  "deleteJobs",
+  "viewCandidates",
+  "addCandidates",
+  "editCandidates",
+  "manageCandidateStages",
+  "manageUsers",
+];
+
+const permissionShape = {};
+for (const key of PERMISSION_KEYS) {
+  permissionShape[key] = {
+    type: Boolean,
+    default: undefined,
+  };
+}
+
 const userSchema = new mongoose.Schema({
   firstName: {
     type: String,
@@ -27,6 +48,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['superadmin', 'hrrecruiter', 'hiringmanager','interviewpanel','management'],
     required: true
+  },
+  permissions: {
+    type: new mongoose.Schema(permissionShape, { _id: false }),
+    default: undefined,
   },
   isActive: {
     type: Boolean,
