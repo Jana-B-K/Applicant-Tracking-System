@@ -35,7 +35,7 @@ const INTERVIEW_STAGES = [
   "Final Interview",
 ];
 
-const INTERVIEW_RESULTS = ["Pending", "Passed", "Failed", "On Hold", "No Show", "Rescheduled"];
+const INTERVIEW_RESULTS = ["Pending", "Passed", "Failed", "On Hold", "Rescheduled"];
 
 const candidateSchema = new mongoose.Schema(
   {
@@ -203,24 +203,6 @@ const candidateSchema = new mongoose.Schema(
           enum: INTERVIEW_RESULTS,
           default: "Pending",
         },
-        rating: {
-          type: Number,
-          min: 1,
-          max: 5,
-          required: false,
-        },
-        
-        // Skill-wise ratings (optional but recommended)
-        skillRatings: [
-          {
-            skill: String,
-            rating: {
-              type: Number,
-              min: 1,
-              max: 5,
-            },
-          },
-        ],
         
         // Feedback
         feedback: {
@@ -228,38 +210,6 @@ const candidateSchema = new mongoose.Schema(
           required: function () {
             return this.result && !["Pending", "Rescheduled"].includes(this.result);
           },
-        },
-        strengths: {
-          type: String,
-          required: false,
-        },
-        weaknesses: {
-          type: String,
-          required: false,
-        },
-        additionalNotes: {
-          type: String,
-          required: false,
-        },
-        
-        // Tracking who created/updated
-        createdBy: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "User",
-          required: true,
-        },
-        createdByName: {
-          type: String,
-          required: true,
-        },
-        updatedBy: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "User",
-          required: false,
-        },
-        updatedByName: {
-          type: String,
-          required: false,
         },
         
         // Timestamps
@@ -288,10 +238,6 @@ const candidateSchema = new mongoose.Schema(
     
     // Application Metrics
     applicationMetrics: {
-      averageRating: {
-        type: Number,
-        default: 0,
-      },
       totalInterviewsScheduled: {
         type: Number,
         default: 0,
@@ -361,16 +307,6 @@ candidateSchema.pre("save", function (next) {
       (new Date() - new Date(this.createdAt)) / (1000 * 60 * 60 * 24)
     );
     this.applicationMetrics.daysInPipeline = daysDiff;
-  }
-  
-  // Update average rating
-  const completedWithRating = this.interviews.filter(
-    (i) => i.rating && i.result !== "Pending"
-  );
-  if (completedWithRating.length > 0) {
-    const totalRating = completedWithRating.reduce((sum, i) => sum + i.rating, 0);
-    this.applicationMetrics.averageRating = 
-      Math.round((totalRating / completedWithRating.length) * 10) / 10;
   }
   
   // Update current round

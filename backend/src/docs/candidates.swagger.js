@@ -141,36 +141,7 @@
  *         result:
  *           type: string
  *           enum: [Pending, Passed, Failed, On Hold, No Show, Rescheduled]
- *         rating:
- *           type: number
- *           minimum: 1
- *           maximum: 5
- *         skillRatings:
- *           type: array
- *           items:
- *             type: object
- *             properties:
- *               skill:
- *                 type: string
- *               rating:
- *                 type: number
- *                 minimum: 1
- *                 maximum: 5
  *         feedback:
- *           type: string
- *         strengths:
- *           type: string
- *         weaknesses:
- *           type: string
- *         additionalNotes:
- *           type: string
- *         createdBy:
- *           type: string
- *         createdByName:
- *           type: string
- *         updatedBy:
- *           type: string
- *         updatedByName:
  *           type: string
  *         createdAt:
  *           type: string
@@ -182,8 +153,6 @@
  *     CandidateMetrics:
  *       type: object
  *       properties:
- *         averageRating:
- *           type: number
  *         totalInterviewsScheduled:
  *           type: number
  *         totalInterviewsCompleted:
@@ -264,6 +233,7 @@
  *           type: array
  *           items:
  *             type: string
+ *           maxItems: 2
  *         scheduledAt:
  *           type: string
  *           format: date-time
@@ -274,10 +244,6 @@
  *           type: string
  *         location:
  *           type: string
- *         createdBy:
- *           type: string
- *           description: Required only if auth middleware does not set req.user
- *
  *     CandidateInterviewUpdateInput:
  *       type: object
  *       properties:
@@ -286,6 +252,11 @@
  *           enum: [Screening, Technical Interview 1, Technical Interview 2, Technical Interview 3, HR Interview, Managerial Round, Final Interview]
  *         interviewerId:
  *           type: string
+ *         coInterviewerIds:
+ *           type: array
+ *           items:
+ *             type: string
+ *           maxItems: 2
  *         scheduledAt:
  *           type: string
  *           format: date-time
@@ -298,37 +269,110 @@
  *         result:
  *           type: string
  *           enum: [Pending, Passed, Failed, On Hold, No Show, Rescheduled]
- *         rating:
- *           type: number
- *           minimum: 1
- *           maximum: 5
  *         feedback:
  *           type: string
- *         strengths:
- *           type: string
- *         weaknesses:
- *           type: string
- *         additionalNotes:
- *           type: string
- *         skillRatings:
- *           type: array
- *           items:
- *             type: object
- *             properties:
- *               skill:
- *                 type: string
- *               rating:
- *                 type: number
- *                 minimum: 1
- *                 maximum: 5
  *         completedAt:
  *           type: string
  *           format: date-time
  *         actualDuration:
  *           type: number
- *         updatedBy:
+ *
+ *     CandidateUpdateInput:
+ *       type: object
+ *       properties:
+ *         name:
  *           type: string
- *           description: Required only if auth middleware does not set req.user
+ *         jobID:
+ *           type: string
+ *         email:
+ *           type: string
+ *           format: email
+ *         contactDetails:
+ *           type: string
+ *         location:
+ *           type: string
+ *         skills:
+ *           type: array
+ *           items:
+ *             type: string
+ *         experience:
+ *           type: number
+ *         education:
+ *           type: string
+ *         noticePeriod:
+ *           type: number
+ *         referal:
+ *           type: string
+ *         role:
+ *           type: string
+ *         status:
+ *           type: string
+ *           enum: [Applied, Screened, Shortlisted, Technical Interview 1, Technical Interview 2, HR Round, HR Interview, Selected, Offered, Offer Accepted, Offer Declined, Offer Revoked, BGV, Cancelled, No Answer, Candidate Not Interested, Joined, Rejected Technical Interview 1, Rejected Technical Interview 2, Rejected, On Hold, Withdrawn]
+ *
+ *     CandidateInterviewsResponse:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *         name:
+ *           type: string
+ *         status:
+ *           type: string
+ *         interviews:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/CandidateInterview'
+ *         applicationMetrics:
+ *           $ref: '#/components/schemas/CandidateMetrics'
+ *
+ *     CandidateTimelineEvent:
+ *       type: object
+ *       properties:
+ *         type:
+ *           type: string
+ *           enum: [status_change, interview_scheduled, interview_completed]
+ *         date:
+ *           type: string
+ *           format: date-time
+ *         data:
+ *           type: object
+ *
+ *     CandidateTimelineResponse:
+ *       type: object
+ *       properties:
+ *         candidate:
+ *           type: object
+ *           properties:
+ *             id:
+ *               type: string
+ *             name:
+ *               type: string
+ *             email:
+ *               type: string
+ *               format: email
+ *             currentStatus:
+ *               type: string
+ *             applicationMetrics:
+ *               $ref: '#/components/schemas/CandidateMetrics'
+ *         timeline:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/CandidateTimelineEvent'
+ *
+ *     InterviewAnalyticsItem:
+ *       type: object
+ *       properties:
+ *         stage:
+ *           type: string
+ *         totalInterviews:
+ *           type: number
+ *           description: Count of interview entries in this stage
+ *         passed:
+ *           type: number
+ *         failed:
+ *           type: number
+ *         passRate:
+ *           type: number
  */
 
 /**
@@ -346,8 +390,16 @@
  *     responses:
  *       201:
  *         description: Candidate created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Candidate'
  *       500:
  *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *   get:
  *     summary: Get candidates with optional filters
  *     tags: [Candidates]
@@ -404,8 +456,22 @@
  *     responses:
  *       200:
  *         description: Candidate details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Candidate'
  *       404:
  *         description: Candidate not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *   put:
  *     summary: Update candidate details
  *     tags: [Candidates]
@@ -420,12 +486,26 @@
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/CandidateInput'
+ *             $ref: '#/components/schemas/CandidateUpdateInput'
  *     responses:
  *       200:
  *         description: Candidate updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Candidate'
  *       404:
  *         description: Candidate not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 
 /**
@@ -449,12 +529,34 @@
  *     responses:
  *       200:
  *         description: Status updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Candidate'
  *       400:
  *         description: Invalid payload
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       401:
  *         description: Authentication required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
  *         description: Candidate/User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 
 /**
@@ -484,10 +586,28 @@
  *     responses:
  *       200:
  *         description: Resume uploaded
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Candidate'
  *       400:
  *         description: Missing file
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
  *         description: Candidate not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 
 /**
@@ -505,8 +625,22 @@
  *     responses:
  *       200:
  *         description: Interview rounds
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CandidateInterviewsResponse'
  *       404:
  *         description: Candidate not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 
 /**
@@ -530,12 +664,28 @@
  *     responses:
  *       200:
  *         description: Interview added
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Candidate'
  *       400:
  *         description: Invalid payload/interviewer/date
- *       401:
- *         description: Authentication required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
  *         description: Candidate not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 
 /**
@@ -564,12 +714,28 @@
  *     responses:
  *       200:
  *         description: Interview updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Candidate'
  *       400:
  *         description: Invalid payload
- *       401:
- *         description: Authentication required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       404:
  *         description: Candidate or interview not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 
 /**
@@ -587,8 +753,22 @@
  *     responses:
  *       200:
  *         description: Candidate timeline
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CandidateTimelineResponse'
  *       404:
  *         description: Candidate not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 
 /**
@@ -605,6 +785,16 @@
  *     responses:
  *       200:
  *         description: Analytics by interview stage
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/InterviewAnalyticsItem'
  *       500:
  *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */

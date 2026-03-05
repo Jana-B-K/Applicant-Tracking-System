@@ -84,7 +84,7 @@ export const uploadResume = async (req, res) => {
   }
 };
 
-// Enhanced with creator tracking
+// Interview scheduling
 export const addInterviewToCandidate = async (req, res) => {
   try {
     const { stage, interviewerId, scheduledAt } = req.body;
@@ -94,16 +94,9 @@ export const addInterviewToCandidate = async (req, res) => {
       });
     }
 
-    // Get creator from authenticated user
-    const createdByUserId = req.user?._id || req.body.createdBy;
-    if (!createdByUserId) {
-      return res.status(401).json({ message: 'User authentication required' });
-    }
-
     const candidate = await candidateService.addInterviewToCandidate(
       req.params.id,
-      req.body,
-      createdByUserId
+      req.body
     );
     
     if (!candidate) return res.status(404).json({ message: 'Candidate not found' });
@@ -111,7 +104,9 @@ export const addInterviewToCandidate = async (req, res) => {
   } catch (error) {
     if (
       error.message.includes('not found') ||
-      error.message.includes('Invalid date format')
+      error.message.includes('Invalid date format') ||
+      error.message.includes('coInterviewerIds') ||
+      error.message.includes('maximum of 2 co-interviewers')
     ) {
       return res.status(400).json({ message: error.message });
     }
@@ -119,19 +114,13 @@ export const addInterviewToCandidate = async (req, res) => {
   }
 };
 
-// Enhanced with updater tracking
+// Interview update
 export const updateInterviewForCandidate = async (req, res) => {
   try {
-    const updatedByUserId = req.user?._id || req.body.updatedBy;
-    if (!updatedByUserId) {
-      return res.status(401).json({ message: 'User authentication required' });
-    }
-
     const candidate = await candidateService.updateInterviewForCandidate(
       req.params.id,
       req.params.interviewId,
-      req.body,
-      updatedByUserId
+      req.body
     );
     
     if (!candidate) {
@@ -142,7 +131,8 @@ export const updateInterviewForCandidate = async (req, res) => {
     if (
       error.message.includes('No interview fields provided') ||
       error.message.includes('not found') ||
-      error.message.includes('Invalid date format')
+      error.message.includes('Invalid date format') ||
+      error.message.includes('coInterviewerIds')
     ) {
       return res.status(400).json({ message: error.message });
     }

@@ -37,7 +37,6 @@ export const createCandidate = async (candidateData) => {
         updatedAt: new Date(),
       }],
       applicationMetrics: {
-        averageRating: 0,
         totalInterviewsScheduled: 0,
         totalInterviewsCompleted: 0,
         totalInterviewsPassed: 0,
@@ -153,8 +152,8 @@ export const uploadResume = async (id, file) => {
   }
 };
 
-// Enhanced interview scheduling with creator tracking
-export const addInterviewToCandidate = async (id, interviewData, createdByUserId) => {
+// Interview scheduling
+export const addInterviewToCandidate = async (id, interviewData) => {
   try {
     // Fetch interviewer details
     const interviewer = await User.findById(interviewData.interviewerId)
@@ -163,20 +162,16 @@ export const addInterviewToCandidate = async (id, interviewData, createdByUserId
       throw new Error('Interviewer not found');
     }
 
-    // Fetch creator details
-    const createdBy = await User.findById(createdByUserId)
-      .select('firstName lastName email');
-    if (!createdBy) {
-      throw new Error('Creator user not found');
-    }
-
     const interviewerName = `${interviewer.firstName} ${interviewer.lastName}`.trim();
-    const createdByName = `${createdBy.firstName} ${createdBy.lastName}`.trim();
     const scheduledAt = toDateFromISTInput(interviewData.scheduledAt);
 
     // Handle co-interviewers if provided
     const coInterviewers = [];
     if (interviewData.coInterviewerIds && interviewData.coInterviewerIds.length > 0) {
+      if (interviewData.coInterviewerIds.length > 2) {
+        throw new Error('A maximum of 2 co-interviewers is allowed');
+      }
+
       const coInterviewerDocs = await User.find({
         _id: { $in: interviewData.coInterviewerIds }
       }).select('firstName lastName email role');
@@ -205,8 +200,6 @@ export const addInterviewToCandidate = async (id, interviewData, createdByUserId
       meetingLink: interviewData.meetingLink || '',
       location: interviewData.location || '',
       result: 'Pending',
-      createdBy: createdBy._id,
-      createdByName,
       createdAt: new Date(),
     };
 
@@ -223,19 +216,10 @@ export const addInterviewToCandidate = async (id, interviewData, createdByUserId
   }
 };
 
-// Enhanced interview update with updater tracking
-export const updateInterviewForCandidate = async (id, interviewId, interviewData, updatedByUserId) => {
+// Interview update
+export const updateInterviewForCandidate = async (id, interviewId, interviewData) => {
   try {
     const setData = {};
-
-    // Fetch updater details
-    const updatedBy = await User.findById(updatedByUserId)
-      .select('firstName lastName email');
-    if (!updatedBy) {
-      throw new Error('Updater user not found');
-    }
-
-    const updatedByName = `${updatedBy.firstName} ${updatedBy.lastName}`.trim();
 
     if (interviewData.stage !== undefined) {
       setData['interviews.$.stage'] = interviewData.stage;
@@ -261,6 +245,34 @@ export const updateInterviewForCandidate = async (id, interviewId, interviewData
       setData['interviews.$.duration'] = interviewData.duration;
     }
 
+    if (interviewData.coInterviewerIds !== undefined) {
+      if (!Array.isArray(interviewData.coInterviewerIds)) {
+        throw new Error('coInterviewerIds must be an array');
+      }
+
+      if (interviewData.coInterviewerIds.length > 2) {
+        throw new Error('A maximum of 2 co-interviewers is allowed');
+      }
+
+      const coInterviewers = [];
+      if (interviewData.coInterviewerIds.length > 0) {
+        const coInterviewerDocs = await User.find({
+          _id: { $in: interviewData.coInterviewerIds }
+        }).select('firstName lastName email role');
+
+        coInterviewers.push(
+          ...coInterviewerDocs.map(co => ({
+            id: co._id,
+            name: `${co.firstName} ${co.lastName}`.trim(),
+            email: co.email,
+            role: co.role,
+          }))
+        );
+      }
+
+      setData['interviews.$.coInterviewers'] = coInterviewers;
+    }
+
     if (interviewData.meetingLink !== undefined) {
       setData['interviews.$.meetingLink'] = interviewData.meetingLink;
     }
@@ -273,28 +285,8 @@ export const updateInterviewForCandidate = async (id, interviewId, interviewData
       setData['interviews.$.result'] = interviewData.result;
     }
 
-    if (interviewData.rating !== undefined) {
-      setData['interviews.$.rating'] = interviewData.rating;
-    }
-
     if (interviewData.feedback !== undefined) {
       setData['interviews.$.feedback'] = interviewData.feedback;
-    }
-
-    if (interviewData.strengths !== undefined) {
-      setData['interviews.$.strengths'] = interviewData.strengths;
-    }
-
-    if (interviewData.weaknesses !== undefined) {
-      setData['interviews.$.weaknesses'] = interviewData.weaknesses;
-    }
-
-    if (interviewData.additionalNotes !== undefined) {
-      setData['interviews.$.additionalNotes'] = interviewData.additionalNotes;
-    }
-
-    if (interviewData.skillRatings !== undefined) {
-      setData['interviews.$.skillRatings'] = interviewData.skillRatings;
     }
 
     // Auto-set completedAt if result is being updated to non-pending
@@ -314,14 +306,10 @@ export const updateInterviewForCandidate = async (id, interviewId, interviewData
       setData['interviews.$.actualDuration'] = interviewData.actualDuration;
     }
 
-    // Always update the updater info
-    setData['interviews.$.updatedBy'] = updatedBy._id;
-    setData['interviews.$.updatedByName'] = updatedByName;
-    setData['interviews.$.updatedAt'] = new Date();
-
     if (Object.keys(setData).length === 0) {
       throw new Error('No interview fields provided for update');
     }
+    setData['interviews.$.updatedAt'] = new Date();
 
     const updatedCandidate = await Candidate.findOneAndUpdate(
       { _id: id, 'interviews._id': interviewId },
@@ -339,9 +327,7 @@ export const getCandidateInterviews = async (id) => {
     const candidate = await Candidate.findById(id)
       .select('name status interviews applicationMetrics')
       .populate('interviews.interviewer.id', 'firstName lastName email role')
-      .populate('interviews.coInterviewers.id', 'firstName lastName email role')
-      .populate('interviews.createdBy', 'firstName lastName email')
-      .populate('interviews.updatedBy', 'firstName lastName email');
+      .populate('interviews.coInterviewers.id', 'firstName lastName email role');
     
     return candidate;
   } catch (error) {
@@ -354,9 +340,7 @@ export const getCandidateTimeline = async (id) => {
   try {
     const candidate = await Candidate.findById(id)
       .populate('statusHistory.updatedBy', 'firstName lastName email role')
-      .populate('interviews.interviewer.id', 'firstName lastName email role')
-      .populate('interviews.createdBy', 'firstName lastName email')
-      .populate('interviews.updatedBy', 'firstName lastName email');
+      .populate('interviews.interviewer.id', 'firstName lastName email role');
 
     if (!candidate) {
       throw new Error('Candidate not found');
@@ -433,7 +417,6 @@ export const getInterviewAnalytics = async (jobID = null) => {
               $cond: [{ $eq: ['$interviews.result', 'Passed'] }, 1, 0]
             }
           },
-          averageRating: { $avg: '$interviews.rating' },
         }
       },
       {
@@ -448,7 +431,6 @@ export const getInterviewAnalytics = async (jobID = null) => {
               100
             ]
           },
-          averageRating: { $round: ['$averageRating', 2] },
         }
       },
       { $sort: { totalInterviews: -1 } }
