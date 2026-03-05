@@ -113,7 +113,10 @@ export const me = async (req, res, next) => {
   try {
     return res.status(200).json({
       success: true,
-      user: req.user,
+      user: {
+        ...req.user.toObject(),
+        permissions: req.permissions,
+      },
     });
   } catch (error) {
     next(error);
@@ -133,5 +136,4 @@ export const updateProfile = async (req, res, next) => {
     next(error);
   }
 };
-
 

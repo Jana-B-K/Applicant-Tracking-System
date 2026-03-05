@@ -18,12 +18,14 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  empId:{
+    type: String,
+    unique: true,
+    sparse: true
+  },
   role: {
     type: String,
-    enum: ['superadmin', 'hrrecruiter', 'hiringmanager','management']
-  },
-  accessToken: {
-    type: String,
+    enum: ['superadmin', 'hrrecruiter', 'hiringmanager','interviewpanel','management']
   },
   refreshToken: {
     type: String,

@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import crypto from "node:crypto";
 import { generateAccessToken, generateRefreshToken} from "../utils/token.js";
+import { getRolePermissionsService } from "./rbac.service.js";
 
 export const registerService = async ({ firstName, lastName, email, password }) => {
   const existingUser = await User.findOne({ email });
@@ -46,6 +47,7 @@ export const loginService = async ({ email, password }) => {
 
   user.refreshToken = refreshToken;
   await user.save();
+  const permissions = await getRolePermissionsService(user.role);
 
   return {
     accessToken,
@@ -55,6 +57,8 @@ export const loginService = async ({ email, password }) => {
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
+      role: user.role,
+      permissions,
     },
   };
 };
