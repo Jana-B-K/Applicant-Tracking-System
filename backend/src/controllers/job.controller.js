@@ -12,7 +12,8 @@ export const createJob = async (req, res, next) => {
 
 export const getAllJobs = async (req, res, next) => {
     try {
-        const jobs = await jobService.getAllJobs();
+        const filters = req.query; // You can implement filtering logic in the service layer based on these query parameters
+        const jobs = await jobService.getAllJobs(filters);
         res.status(200).json(jobs);
     } catch (error) {
         next(error);

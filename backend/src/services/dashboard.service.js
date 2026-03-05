@@ -159,3 +159,82 @@ export const getWeeklyHiringStats = async (weeksInput) => {
 
   return points;
 };
+
+const clampPositiveInt = (value, fallback, min, max) => {
+  const parsed = Number.parseInt(value, 10);
+  if (Number.isNaN(parsed)) return fallback;
+  return Math.min(Math.max(parsed, min), max);
+};
+
+export const getHiringAlerts = async ({
+  endInDays: endInDaysInput,
+  transitionDays: transitionDaysInput,
+  transitionLimit: transitionLimitInput,
+} = {}) => {
+  const endInDays = clampPositiveInt(endInDaysInput, 1, 1, 90);
+  const transitionDays = clampPositiveInt(transitionDaysInput, 1, 1, 90);
+  const transitionLimit = clampPositiveInt(transitionLimitInput, 50, 1, 500);
+
+  const now = new Date();
+  const jobsEndDate = new Date(now);
+  jobsEndDate.setUTCDate(jobsEndDate.getUTCDate() + endInDays);
+
+  const transitionSince = new Date(now);
+  transitionSince.setUTCDate(transitionSince.getUTCDate() - transitionDays);
+
+  const [jobsClosingSoon, candidatesWithHistory] = await Promise.all([
+    JobManagement.find({
+      isDeleted: { $ne: true },
+      jobStatus: { $in: ["Open", "On Hold"] },
+      targetClosureDate: { $gte: now, $lte: jobsEndDate },
+    })
+      .select("jobTitle department location jobStatus targetClosureDate numberOfOpenings")
+      .sort({ targetClosureDate: 1 })
+      .lean(),
+    Candidate.find({
+      "statusHistory.1": { $exists: true },
+      "statusHistory.updatedAt": { $gte: transitionSince },
+    })
+      .select("name email jobID statusHistory")
+      .populate("jobID", "jobTitle department location")
+      .lean(),
+  ]);
+
+  const candidateStageTransitions = candidatesWithHistory
+    .flatMap((candidate) => {
+      const history = Array.isArray(candidate.statusHistory) ? candidate.statusHistory : [];
+      return history
+        .map((entry, index) => ({ entry, index }))
+        .filter(({ index, entry }) => index > 0 && entry?.updatedAt && new Date(entry.updatedAt) >= transitionSince)
+        .map(({ entry, index }) => ({
+          candidateId: candidate._id,
+          candidateName: candidate.name,
+          candidateEmail: candidate.email,
+          job: candidate.jobID
+            ? {
+                id: candidate.jobID._id || candidate.jobID,
+                jobTitle: candidate.jobID.jobTitle || null,
+                department: candidate.jobID.department || null,
+                location: candidate.jobID.location || null,
+              }
+            : null,
+          fromStatus: history[index - 1]?.status || null,
+          toStatus: entry.status || null,
+          movedAt: entry.updatedAt,
+          updatedByName: entry.updatedByName || null,
+          updatedByEmail: entry.updatedByEmail || null,
+        }));
+    })
+    .sort((a, b) => new Date(b.movedAt) - new Date(a.movedAt))
+    .slice(0, transitionLimit);
+
+  return {
+    filters: {
+      endInDays,
+      transitionDays,
+      transitionLimit,
+    },
+    jobsClosingSoon,
+    candidateStageTransitions,
+  };
+};
