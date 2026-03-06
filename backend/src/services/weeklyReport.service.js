@@ -9,18 +9,36 @@ const STAGE_ORDER = [
   "applied",
   "screened",
   "shortlisted",
-  "technical interview 1",
-  "technical interview 2",
+  "technical interview I",
+  "technical interview II",
   "hr round",
   "selected",
   "offered",
+  "offer accepted",
   "joined",
   "rejected",
 ];
+const DEFAULT_FILLED_STATUSES = ["joined", "offer accepted"];
 
-const getAgingDays = (date) => {
-  if (!date) return 0;
-  return Math.max(0, Math.floor((Date.now() - new Date(date).getTime()) / DAY_IN_MS));
+const getAgingDays = (targetClosureDate) => {
+  if (!targetClosureDate) return 0;
+  const target = new Date(targetClosureDate);
+  if (Number.isNaN(target.getTime())) return 0;
+
+  const now = new Date();
+  const todayUtc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const targetUtc = Date.UTC(target.getUTCFullYear(), target.getUTCMonth(), target.getUTCDate());
+
+  // Aging means remaining hiring days until target closure date.
+  return Math.max(0, Math.ceil((targetUtc - todayUtc) / DAY_IN_MS));
+};
+
+const resolveCreatedAt = (job) => {
+  if (job?.createdAt) return job.createdAt;
+  if (job?._id && typeof job._id.getTimestamp === "function") {
+    return job._id.getTimestamp();
+  }
+  return null;
 };
 
 const parseRecipientEmails = () => {
@@ -30,67 +48,138 @@ const parseRecipientEmails = () => {
     .filter(Boolean);
 };
 
-const buildStageCountString = (stageCounts) => {
-  const parts = [];
-  for (const stage of STAGE_ORDER) {
-    parts.push(`${stage}: ${stageCounts[stage] || 0}`);
+const parseFilledStatuses = () => {
+  const raw = String(process.env.WEEKLY_REPORT_FILLED_STATUSES || "")
+    .split(",")
+    .map((status) => status.trim().toLowerCase())
+    .filter(Boolean);
+
+  return new Set(raw.length > 0 ? raw : DEFAULT_FILLED_STATUSES);
+};
+
+const toStageKey = (status) => {
+  const normalized = String(status || "").trim().toLowerCase();
+  if (!normalized) return "other";
+
+  const stageAliases = {
+    screening: "screened",
+    "hr interview": "hr round",
+    "technical interview 1": "technical interview I",
+    "technical interview 2": "technical interview II",
+    "technical intv 1": "technical interview I",
+    "technical intv 2": "technical interview II",
+  };
+
+  const normalizedStageOrder = new Set(STAGE_ORDER.map((stage) => stage.toLowerCase()));
+  if (normalizedStageOrder.has(normalized)) {
+    const exactStage = STAGE_ORDER.find((stage) => stage.toLowerCase() === normalized);
+    return exactStage || "other";
   }
-  return parts.join(", ");
+
+  return stageAliases[normalized] || "other";
+};
+
+const formatDate = (date) => {
+  if (!date) return "-";
+  const d = new Date(date);
+  if (Number.isNaN(d.getTime())) return "-";
+  return d.toISOString().slice(0, 10);
+};
+
+const buildStageCountString = (stageCounts) => {
+  const lines = [];
+  for (const stage of STAGE_ORDER) {
+    lines.push(`${stage}: ${Number(stageCounts[stage] || 0)}`);
+  }
+  lines.push(`other: ${Number(stageCounts.other || 0)}`);
+
+  return lines.join("\n");
 };
 
 const getWeeklyReportRows = async () => {
-  const [jobs, stageCountsAgg] = await Promise.all([
-    JobManagement.find({ isDeleted: { $ne: true } })
-      .select("jobTitle numberOfOpenings createdAt")
+  const filledStatusSet = parseFilledStatuses();
+  const [jobs, candidateStatusAgg, totalCandidateAgg] = await Promise.all([
+    JobManagement.find({
+      isDeleted: { $ne: true },
+    })
+      .select("jobTitle numberOfOpenings createdAt targetClosureDate")
       .sort({ createdAt: -1 })
       .lean(),
     Candidate.aggregate([
       {
-        $group: {
-          _id: {
-            job: "$jobID",
-            stage: {
-              $toLower: {
-                $trim: { input: { $ifNull: ["$status", ""] } },
-              },
+        $match: {
+          jobID: { $exists: true, $ne: null },
+        },
+      },
+      {
+        $project: {
+          jobID: 1,
+          normalizedStatus: {
+            $toLower: {
+              $trim: { input: { $ifNull: ["$status", ""] } },
             },
           },
-          count: { $sum: 1 },
         },
       },
       {
         $group: {
-          _id: "$_id.job",
-          stages: {
-            $push: {
-              k: "$_id.stage",
-              v: "$count",
-            },
+          _id: {
+            job: "$jobID",
+            status: "$normalizedStatus",
           },
+          count: { $sum: 1 },
+        },
+      },
+    ]),
+    Candidate.aggregate([
+      {
+        $match: {
+          jobID: { $exists: true, $ne: null },
+        },
+      },
+      {
+        $group: {
+          _id: "$jobID",
+          count: { $sum: 1 },
         },
       },
     ]),
   ]);
 
-  const stageCountByJob = new Map(
-    stageCountsAgg.map((item) => [
-      String(item._id),
-      Object.fromEntries((item.stages || []).map((row) => [row.k, row.v])),
-    ])
-  );
+  const stageCountByJob = new Map();
+  for (const row of candidateStatusAgg) {
+    const jobId = String(row._id?.job || "");
+    if (!jobId) continue;
+
+    if (!stageCountByJob.has(jobId)) {
+      stageCountByJob.set(jobId, {});
+    }
+
+    const perJobCounts = stageCountByJob.get(jobId);
+    const stageKey = toStageKey(row._id?.status);
+    perJobCounts[stageKey] = Number(perJobCounts[stageKey] || 0) + Number(row.count || 0);
+  }
+
+  const totalCandidateByJob = new Map(totalCandidateAgg.map((row) => [String(row._id), Number(row.count || 0)]));
 
   return jobs.map((job) => {
     const stageCounts = stageCountByJob.get(String(job._id)) || {};
+    stageCounts.applied = totalCandidateByJob.get(String(job._id)) || 0;
+
     const openings = Number(job.numberOfOpenings || 0);
-    const filled = Number(stageCounts.joined || 0);
+    const filled = Object.entries(stageCounts).reduce((total, [status, count]) => {
+      return filledStatusSet.has(status) ? total + Number(count || 0) : total;
+    }, 0);
+    const createdAt = resolveCreatedAt(job);
 
     return {
       jobTitle: job.jobTitle || "-",
+      createdAt: formatDate(createdAt),
       openings,
       filled,
       pending: Math.max(openings - filled, 0),
       stageWiseCount: buildStageCountString(stageCounts),
-      aging: getAgingDays(job.createdAt),
+      aging: getAgingDays(job.targetClosureDate),
     };
   });
 };
@@ -101,14 +190,23 @@ const buildWorkbook = async (rows) => {
 
   worksheet.columns = [
     { header: "Job Title", key: "jobTitle", width: 30 },
+    { header: "Created At", key: "createdAt", width: 14 },
     { header: "Openings", key: "openings", width: 12 },
     { header: "Filled", key: "filled", width: 10 },
     { header: "Pending", key: "pending", width: 10 },
-    { header: "Stage-wise Count", key: "stageWiseCount", width: 60 },
+    { header: "Stage-wise Count", key: "stageWiseCount", width: 40 },
     { header: "Aging (Days)", key: "aging", width: 14 },
   ];
 
   worksheet.getRow(1).font = { bold: true };
+  worksheet.getRow(1).alignment = { vertical: "top" };
+  worksheet.getColumn("stageWiseCount").alignment = { wrapText: true, vertical: "top" };
+  worksheet.getColumn("jobTitle").alignment = { vertical: "top" };
+  worksheet.getColumn("createdAt").alignment = { vertical: "top" };
+  worksheet.getColumn("openings").alignment = { vertical: "top" };
+  worksheet.getColumn("filled").alignment = { vertical: "top" };
+  worksheet.getColumn("pending").alignment = { vertical: "top" };
+  worksheet.getColumn("aging").alignment = { vertical: "top" };
 
   for (const row of rows) {
     worksheet.addRow(row);

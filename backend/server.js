@@ -1,10 +1,14 @@
 import dotenv from 'dotenv'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import connectDB from './src/config/dbconfig.js'
 import app from './src/app.js'
 import { startJobCleanupCron } from './src/cron/jobCleanup.cron.js'
 import { startWeeklyReportCron } from './src/cron/weeklyReport.cron.js'
 
-dotenv.config()
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+dotenv.config({ path: path.join(__dirname, '.env') })
 
 await connectDB()
 startJobCleanupCron()
