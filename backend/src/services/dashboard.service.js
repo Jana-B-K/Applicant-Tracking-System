@@ -1,6 +1,5 @@
 import JobManagement from "../models/job.model.js";
 import Candidate from "../models/candidate.model.js";
-import Application from "../models/application.model.js";
 
 const MS_IN_DAY = 24 * 60 * 60 * 1000;
 
@@ -8,11 +7,22 @@ const STAGE_ORDER = [
   "applied",
   "screened",
   "shortlisted",
-  "technical intv 1",
-  "technical intv 2",
+  "technical interview 1",
+  "technical interview 2",
   "hr round",
-  "rejected",
   "selected",
+  "offered",
+  "offer accepted",
+  "offer declined",
+  "offer revoked",
+  "bgv",
+  "joined",
+  "rejected technical interview 1",
+  "rejected technical interview 2",
+  "rejected",
+  "cancelled",
+  "candidate not interested",
+  "no answer",
 ];
 
 const clampWeeks = (value) => {
@@ -73,12 +83,12 @@ export const getDashboardSummary = async () => {
 
  
 export const getHiringFunnel = async () => {
-  const stageCounts = await Application.aggregate([
+  const stageCounts = await Candidate.aggregate([
     {
       $project: {
        normalizedStage: {
           $toLower: {
-            $trim: { input: { $ifNull: ["$stage", ""] } },
+            $trim: { input: { $ifNull: ["$status", ""] } },
           },
         },
       },
@@ -259,4 +269,3 @@ export const getHiringAlerts = async ({
     candidateStageTransitions,
   };
 };
-

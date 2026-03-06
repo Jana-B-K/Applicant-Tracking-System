@@ -24,11 +24,11 @@
  * /dashboard/funnel:
  *   get:
  *     tags: [Dashboard]
- *     summary: Get hiring funnel data
+ *     summary: Get hiring funnel data (based on candidate status)
  *     security:
  *       - bearerAuth: []
  *     responses:
- *       200: { description: Funnel metrics }
+ *       200: { description: Funnel metrics aggregated from Candidate.status }
  *       401: { description: Unauthorized }
  *       403: { description: Forbidden (missing viewDashboard permission) }
  */

@@ -4,7 +4,6 @@ import bcrypt from "bcryptjs";
 import User from "../models/user.model.js";
 import JobManagement from "../models/job.model.js";
 import Candidate from "../models/candidate.model.js";
-import Application from "../models/application.model.js";
 import RbacPolicy from "../models/rbacPolicy.model.js";
 
 const DEFAULT_POLICY_NAME = "default";
@@ -199,7 +198,6 @@ const run = async () => {
   await mongoose.connect(process.env.MONGO_URI);
 
   if (shouldReset) {
-    await Application.deleteMany({});
     await Candidate.deleteMany({});
     await JobManagement.deleteMany({});
     await User.deleteMany({});
@@ -346,29 +344,10 @@ const run = async () => {
     );
   }
 
-  const candidates = await Candidate.find({
-    email: { $in: candidateSeed.map((c) => c.email) },
-  });
-
-  for (const candidate of candidates) {
-    await Application.findOneAndUpdate(
-      { candidate: candidate._id, job: candidate.jobID },
-      {
-        $set: {
-          stage: "screening",
-          movedAt: new Date(),
-          notes: "Seeded application for dashboard testing.",
-        },
-      },
-      { upsert: true, returnDocument: "after", setDefaultsOnInsert: true }
-    );
-  }
-
-  const [userCount, jobCount, candidateCount, applicationCount, policyCount] = await Promise.all([
+  const [userCount, jobCount, candidateCount, policyCount] = await Promise.all([
     User.countDocuments(),
     JobManagement.countDocuments(),
     Candidate.countDocuments(),
-    Application.countDocuments(),
     RbacPolicy.countDocuments(),
   ]);
 
@@ -377,7 +356,6 @@ const run = async () => {
     users: userCount,
     jobs: jobCount,
     candidates: candidateCount,
-    applications: applicationCount,
     rbacPolicies: policyCount,
     defaultPassword: "Password@1234",
   });
