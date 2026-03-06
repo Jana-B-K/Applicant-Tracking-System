@@ -1,5 +1,4 @@
 import {
-  createUserService,
   deleteUserService,
   getUserByIdService,
   getUsersService,
