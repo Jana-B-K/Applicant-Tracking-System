@@ -29,39 +29,6 @@ const withEffectivePermissions = async (user) => {
   };
 };
 
-export const createUserService = async ({ firstName, lastName, email, password, role, empId, isActive, permissions }) => {
-  const existingUser = await User.findOne({ email });
-  if (existingUser) {
-    throw new Error("User already exists");
-  }
-
-  if (empId) {
-    const existingEmpId = await User.findOne({ empId });
-    if (existingEmpId) {
-      throw new Error("Employee ID already in use");
-    }
-  }
-
-  const permissionOverrides = await buildRoleDiffOverridesService({
-    role,
-    permissions,
-  });
-
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const user = await User.create({
-    firstName,
-    lastName,
-    email,
-    password: hashedPassword,
-    role,
-    empId,
-    isActive: typeof isActive === "boolean" ? isActive : true,
-    permissions: permissionOverrides,
-  });
-
-  return withEffectivePermissions(user);
-};
-
 export const updateProfileService = async (userId, { firstName, lastName, email }) => {
   const user = await User.findById(userId);
 
