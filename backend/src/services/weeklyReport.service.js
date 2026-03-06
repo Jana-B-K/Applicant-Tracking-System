@@ -6,17 +6,16 @@ import WeeklyReportLog from "../models/weeklyReportLog.model.js";
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 const STAGE_ORDER = [
-  "Applied",
-  "Screened",
-  "Shortlisted",
-  "Technical Interview 1",
-  "Technical Interview 2",
-  "HR Round",
-  "Selected",
-  "Offered",
-  "Offer Accepted",
-  "Joined",
-  "Rejected",
+  "applied",
+  "screened",
+  "shortlisted",
+  "technical interview 1",
+  "technical interview 2",
+  "hr round",
+  "selected",
+  "offered",
+  "joined",
+  "rejected",
 ];
 
 const getAgingDays = (date) => {
@@ -50,7 +49,11 @@ const getWeeklyReportRows = async () => {
         $group: {
           _id: {
             job: "$jobID",
-            stage: "$status",
+            stage: {
+              $toLower: {
+                $trim: { input: { $ifNull: ["$status", ""] } },
+              },
+            },
           },
           count: { $sum: 1 },
         },
@@ -79,7 +82,7 @@ const getWeeklyReportRows = async () => {
   return jobs.map((job) => {
     const stageCounts = stageCountByJob.get(String(job._id)) || {};
     const openings = Number(job.numberOfOpenings || 0);
-    const filled = Number(stageCounts.Joined || 0);
+    const filled = Number(stageCounts.joined || 0);
 
     return {
       jobTitle: job.jobTitle || "-",
