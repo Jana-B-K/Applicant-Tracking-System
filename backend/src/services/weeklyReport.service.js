@@ -1,11 +1,23 @@
 import ExcelJS from "exceljs";
 import nodemailer from "nodemailer";
 import JobManagement from "../models/job.model.js";
-import Application from "../models/application.model.js";
+import Candidate from "../models/candidate.model.js";
 import WeeklyReportLog from "../models/weeklyReportLog.model.js";
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
-const STAGE_ORDER = ["applied", "screening", "interview", "offered", "hired", "rejected"];
+const STAGE_ORDER = [
+  "Applied",
+  "Screened",
+  "Shortlisted",
+  "Technical Interview 1",
+  "Technical Interview 2",
+  "HR Round",
+  "Selected",
+  "Offered",
+  "Offer Accepted",
+  "Joined",
+  "Rejected",
+];
 
 const getAgingDays = (date) => {
   if (!date) return 0;
@@ -33,12 +45,12 @@ const getWeeklyReportRows = async () => {
       .select("jobTitle numberOfOpenings createdAt")
       .sort({ createdAt: -1 })
       .lean(),
-    Application.aggregate([
+    Candidate.aggregate([
       {
         $group: {
           _id: {
-            job: "$job",
-            stage: "$stage",
+            job: "$jobID",
+            stage: "$status",
           },
           count: { $sum: 1 },
         },
@@ -67,7 +79,7 @@ const getWeeklyReportRows = async () => {
   return jobs.map((job) => {
     const stageCounts = stageCountByJob.get(String(job._id)) || {};
     const openings = Number(job.numberOfOpenings || 0);
-    const filled = Number(stageCounts.hired || 0);
+    const filled = Number(stageCounts.Joined || 0);
 
     return {
       jobTitle: job.jobTitle || "-",

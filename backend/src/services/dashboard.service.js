@@ -1,5 +1,6 @@
 import JobManagement from "../models/job.model.js";
 import Candidate from "../models/candidate.model.js";
+import WeeklyReportLog from "../models/weeklyReportLog.model.js";
 
 const MS_IN_DAY = 24 * 60 * 60 * 1000;
 
@@ -40,6 +41,20 @@ const getWeekStartUtc = (date) => {
 };
 
 const formatWeekLabel = (date) => date.toISOString().slice(0, 10);
+const formatTimeAgo = (inputDate, now = new Date()) => {
+  if (!inputDate) return null;
+  const date = new Date(inputDate);
+  const diffMs = now - date;
+  if (Number.isNaN(diffMs) || diffMs < 0) return null;
+  const mins = Math.floor(diffMs / (60 * 1000));
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return "yesterday";
+  return `${days}d ago`;
+};
 
 export const getDashboardSummary = async () => {
   const [totalOpenPositions, filledPositions, totalCandidates, timeToFillRaw] = await Promise.all([
@@ -201,10 +216,18 @@ export const getHiringAlerts = async ({
   endInDays: endInDaysInput,
   transitionDays: transitionDaysInput,
   transitionLimit: transitionLimitInput,
+  agingDays: agingDaysInput,
+  interviewDoneDays: interviewDoneDaysInput,
+  interviewLimit: interviewLimitInput,
+  newApplicantDays: newApplicantDaysInput,
 } = {}) => {
   const endInDays = clampPositiveInt(endInDaysInput, 1, 1, 90);
   const transitionDays = clampPositiveInt(transitionDaysInput, 1, 1, 90);
   const transitionLimit = clampPositiveInt(transitionLimitInput, 50, 1, 500);
+  const agingDays = clampPositiveInt(agingDaysInput, 20, 1, 365);
+  const interviewDoneDays = clampPositiveInt(interviewDoneDaysInput, 1, 1, 30);
+  const interviewLimit = clampPositiveInt(interviewLimitInput, 50, 1, 500);
+  const newApplicantDays = clampPositiveInt(newApplicantDaysInput, 1, 1, 30);
 
   const now = new Date();
   const jobsEndDate = new Date(now);
@@ -213,7 +236,24 @@ export const getHiringAlerts = async ({
   const transitionSince = new Date(now);
   transitionSince.setUTCDate(transitionSince.getUTCDate() - transitionDays);
 
-  const [jobsClosingSoon, candidatesWithHistory] = await Promise.all([
+  const agingSince = new Date(now);
+  agingSince.setUTCDate(agingSince.getUTCDate() - agingDays);
+
+  const interviewDoneSince = new Date(now);
+  interviewDoneSince.setUTCDate(interviewDoneSince.getUTCDate() - interviewDoneDays);
+
+  const newApplicantSince = new Date(now);
+  newApplicantSince.setUTCDate(newApplicantSince.getUTCDate() - newApplicantDays);
+
+  const [
+    jobsClosingSoon,
+    agingJobsRaw,
+    candidatesWithHistory,
+    candidatesWithCompletedInterviews,
+    candidatesWithUpcomingInterviews,
+    newApplicantsRaw,
+    latestWeeklyReport,
+  ] = await Promise.all([
     JobManagement.find({
       isDeleted: { $ne: true },
       jobStatus: { $in: ["Open", "On Hold"] },
@@ -222,12 +262,47 @@ export const getHiringAlerts = async ({
       .select("jobTitle department location jobStatus targetClosureDate numberOfOpenings")
       .sort({ targetClosureDate: 1 })
       .lean(),
+    JobManagement.find({
+      isDeleted: { $ne: true },
+      jobStatus: { $in: ["Open", "On Hold"] },
+      createdAt: { $lte: agingSince },
+    })
+      .select("jobTitle department location jobStatus numberOfOpenings createdAt targetClosureDate")
+      .sort({ createdAt: 1 })
+      .limit(transitionLimit)
+      .lean(),
     Candidate.find({
       "statusHistory.1": { $exists: true },
       "statusHistory.updatedAt": { $gte: transitionSince },
     })
       .select("name email jobID statusHistory")
       .populate("jobID", "jobTitle department location")
+      .lean(),
+    Candidate.find({
+      "interviews.completedAt": { $gte: interviewDoneSince },
+    })
+      .select("name email jobID interviews")
+      .populate("jobID", "jobTitle department location")
+      .populate("interviews.interviewer.id", "firstName lastName email role")
+      .lean(),
+    Candidate.find({
+      "interviews.scheduledAt": { $gte: now },
+      "interviews.result": "Pending",
+    })
+      .select("name email interviews")
+      .populate("interviews.interviewer.id", "firstName lastName email role")
+      .lean(),
+    Candidate.find({
+      createdAt: { $gte: newApplicantSince },
+    })
+      .select("name jobID createdAt")
+      .populate("jobID", "jobTitle")
+      .sort({ createdAt: -1 })
+      .limit(interviewLimit)
+      .lean(),
+    WeeklyReportLog.findOne({ status: "success" })
+      .sort({ reportDate: -1 })
+      .select("reportDate createdAt")
       .lean(),
   ]);
 
@@ -259,13 +334,273 @@ export const getHiringAlerts = async ({
     .sort((a, b) => new Date(b.movedAt) - new Date(a.movedAt))
     .slice(0, transitionLimit);
 
+  const jobAging = agingJobsRaw.map((job) => {
+    const createdAt = job.createdAt ? new Date(job.createdAt) : null;
+    const targetClosureDate = job.targetClosureDate ? new Date(job.targetClosureDate) : null;
+    const agingDaysValue = createdAt
+      ? Math.floor((now - createdAt) / MS_IN_DAY)
+      : null;
+    const daysToClosure = targetClosureDate
+      ? Math.ceil((targetClosureDate - now) / MS_IN_DAY)
+      : null;
+
+    return {
+      ...job,
+      agingDays: agingDaysValue,
+      daysToClosure,
+      severity:
+        agingDaysValue !== null && agingDaysValue >= agingDays + 15
+          ? "high"
+          : "medium",
+    };
+  });
+
+  const interviewsCompleted = candidatesWithCompletedInterviews
+    .flatMap((candidate) => {
+      const interviews = Array.isArray(candidate.interviews) ? candidate.interviews : [];
+      return interviews
+        .filter((interview) => {
+          const completedAt = interview?.completedAt ? new Date(interview.completedAt) : null;
+          if (!completedAt || completedAt < interviewDoneSince) return false;
+          return !["Pending", "Rescheduled"].includes(interview?.result || "Pending");
+        })
+        .map((interview) => ({
+          candidateId: candidate._id,
+          candidateName: candidate.name,
+          candidateEmail: candidate.email,
+          job: candidate.jobID
+            ? {
+                id: candidate.jobID._id || candidate.jobID,
+                jobTitle: candidate.jobID.jobTitle || null,
+                department: candidate.jobID.department || null,
+                location: candidate.jobID.location || null,
+              }
+            : null,
+          stage: interview.stage || null,
+          result: interview.result || null,
+          feedback: interview.feedback || null,
+          completedAt: interview.completedAt || null,
+          interviewer: {
+            id:
+              interview?.interviewer?.id?._id ||
+              interview?.interviewer?.id ||
+              null,
+            name:
+              interview?.interviewer?.id
+                ? `${interview.interviewer.id.firstName || ""} ${interview.interviewer.id.lastName || ""}`.trim() ||
+                  interview?.interviewer?.name ||
+                  null
+                : interview?.interviewer?.name || null,
+            email:
+              interview?.interviewer?.id?.email ||
+              interview?.interviewer?.email ||
+              null,
+            role:
+              interview?.interviewer?.id?.role ||
+              interview?.interviewer?.role ||
+              null,
+          },
+        }));
+    })
+    .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
+    .slice(0, interviewLimit);
+
+  const upcomingInterviewEvents = candidatesWithUpcomingInterviews.flatMap((candidate) =>
+    (candidate.interviews || [])
+      .filter(
+        (interview) =>
+          interview?.scheduledAt &&
+          new Date(interview.scheduledAt) >= now &&
+          (interview?.result || "Pending") === "Pending"
+      )
+      .map((interview) => {
+        const interviewerId =
+          interview?.interviewer?.id?._id?.toString?.() ||
+          interview?.interviewer?.id?.toString?.() ||
+          null;
+        const scheduledAt = new Date(interview.scheduledAt);
+        const keyTime = `${scheduledAt.getUTCFullYear()}-${scheduledAt.getUTCMonth()}-${scheduledAt.getUTCDate()}-${scheduledAt.getUTCHours()}-${scheduledAt.getUTCMinutes()}`;
+        return {
+          key: `${interviewerId || "unknown"}-${keyTime}`,
+          candidateName: candidate.name,
+          scheduledAt,
+          interviewer: interview?.interviewer || null,
+          stage: interview?.stage || null,
+        };
+      })
+  );
+
+  const groupedUpcomingBySlot = new Map();
+  for (const event of upcomingInterviewEvents) {
+    const bucket = groupedUpcomingBySlot.get(event.key) || [];
+    bucket.push(event);
+    groupedUpcomingBySlot.set(event.key, bucket);
+  }
+
+  const interviewConflicts = Array.from(groupedUpcomingBySlot.values())
+    .filter((events) => events.length > 1)
+    .map((events, idx) => {
+      const first = events[0];
+      const interviewerName =
+        first?.interviewer?.id
+          ? `${first.interviewer.id.firstName || ""} ${first.interviewer.id.lastName || ""}`.trim() ||
+            first?.interviewer?.name ||
+            "Interviewer"
+          : first?.interviewer?.name || "Interviewer";
+      const candidateNames = events.map((e) => e.candidateName).join(", ");
+      return {
+        id: `interview-conflict-${idx}`,
+        section: "important",
+        severity: "high",
+        category: "CANDIDATES",
+        title: "Interview Conflict Detected",
+        message: `${interviewerName} has overlapping interviews for ${candidateNames}.`,
+        timestamp: first.scheduledAt,
+        timeAgo: formatTimeAgo(first.scheduledAt, now),
+        meta: {
+          type: "interview_conflict",
+          interviewerId: first?.interviewer?.id?._id || first?.interviewer?.id || null,
+          candidates: events.map((e) => e.candidateName),
+          stage: first.stage,
+        },
+      };
+    })
+    .slice(0, Math.min(interviewLimit, 20));
+
+  const newApplicants = newApplicantsRaw.map((candidate, idx) => ({
+    id: `new-applicant-${candidate._id || idx}`,
+    section: "general",
+    severity: "low",
+    category: "CANDIDATES",
+    title: "New Applicant",
+    message: `${candidate.name} applied for ${candidate?.jobID?.jobTitle || "a role"}.`,
+    timestamp: candidate.createdAt,
+    timeAgo: formatTimeAgo(candidate.createdAt, now),
+    meta: {
+      type: "new_applicant",
+      candidateId: candidate._id || null,
+      jobId: candidate?.jobID?._id || null,
+    },
+  }));
+
+  const reportGeneratedAlert =
+    latestWeeklyReport && latestWeeklyReport.reportDate
+      ? {
+          id: `report-generated-${latestWeeklyReport._id || "latest"}`,
+          section: "general",
+          severity: "low",
+          category: "SYSTEM",
+          title: "Report Generated",
+          message: `Weekly hiring report for ${new Date(latestWeeklyReport.reportDate).toLocaleDateString("en-IN")} is ready.`,
+          timestamp: latestWeeklyReport.createdAt || latestWeeklyReport.reportDate,
+          timeAgo: formatTimeAgo(latestWeeklyReport.createdAt || latestWeeklyReport.reportDate, now),
+          meta: { type: "report_generated", reportDate: latestWeeklyReport.reportDate },
+        }
+      : null;
+
+  const importantAlerts = [
+    ...jobsClosingSoon.map((job, idx) => ({
+      id: `job-closing-${job._id || idx}`,
+      section: "important",
+      severity: "high",
+      category: "JOBS",
+      title: "Job Posting Expiring",
+      message: `${job.jobTitle} closes on ${new Date(job.targetClosureDate).toLocaleDateString("en-IN")} (${job.department || "N/A"}).`,
+      timestamp: job.targetClosureDate,
+      timeAgo: formatTimeAgo(job.targetClosureDate, now),
+      meta: { type: "job_closing_soon", jobId: job._id || null },
+    })),
+    ...jobAging
+      .filter((job) => job.severity === "high")
+      .map((job, idx) => ({
+        id: `job-aging-${job._id || idx}`,
+        section: "important",
+        severity: "high",
+        category: "JOBS",
+        title: "Job Aging Alert",
+        message: `${job.jobTitle} is open for ${job.agingDays} days.`,
+        timestamp: job.createdAt,
+        timeAgo: formatTimeAgo(job.createdAt, now),
+        meta: { type: "job_aging", jobId: job._id || null, agingDays: job.agingDays },
+      })),
+    ...interviewConflicts,
+  ];
+
+  const generalAlerts = [
+    ...newApplicants,
+    ...interviewsCompleted.map((item, idx) => ({
+      id: `interview-done-${item.candidateId || idx}-${idx}`,
+      section: "general",
+      severity: item.result === "Failed" ? "medium" : "low",
+      category: "CANDIDATES",
+      title: "Interview Completed",
+      message: `${item.stage} by ${item.interviewer?.name || "Interviewer"} for ${item.candidateName} - Result: ${item.result}.`,
+      timestamp: item.completedAt,
+      timeAgo: formatTimeAgo(item.completedAt, now),
+      meta: {
+        type: "interview_completed",
+        candidateId: item.candidateId,
+        interviewerId: item.interviewer?.id || null,
+        result: item.result,
+      },
+    })),
+    ...candidateStageTransitions.map((item, idx) => ({
+      id: `stage-transition-${item.candidateId || idx}-${idx}`,
+      section: "general",
+      severity: "low",
+      category: "CANDIDATES",
+      title: "Candidate Stage Updated",
+      message: `${item.candidateName}: ${item.fromStatus || "N/A"} -> ${item.toStatus || "N/A"}.`,
+      timestamp: item.movedAt,
+      timeAgo: formatTimeAgo(item.movedAt, now),
+      meta: { type: "candidate_stage_transition", candidateId: item.candidateId },
+    })),
+    ...(reportGeneratedAlert ? [reportGeneratedAlert] : []),
+  ];
+
+  const uiAlerts = {
+    importantAndPriority: importantAlerts
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+      .slice(0, 20),
+    generalNotifications: generalAlerts
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+      .slice(0, 50),
+  };
+
+  const uiSummary = {
+    importantNewCount: uiAlerts.importantAndPriority.length,
+    generalNewCount: uiAlerts.generalNotifications.length,
+    totalNewCount: uiAlerts.importantAndPriority.length + uiAlerts.generalNotifications.length,
+  };
+
   return {
     filters: {
       endInDays,
       transitionDays,
       transitionLimit,
+      agingDays,
+      interviewDoneDays,
+      interviewLimit,
+      newApplicantDays,
     },
+    summaryCounts: {
+      jobsClosingSoon: jobsClosingSoon.length,
+      jobAging: jobAging.length,
+      candidateStageTransitions: candidateStageTransitions.length,
+      interviewsCompleted: interviewsCompleted.length,
+    },
+    segments: {
+      jobsClosingSoon,
+      jobAging,
+      candidateStageTransitions,
+      interviewsCompleted,
+    },
+    uiAlerts,
+    uiSummary,
+    // Backward-compatible keys
     jobsClosingSoon,
+    jobAging,
     candidateStageTransitions,
+    interviewsCompleted,
   };
 };

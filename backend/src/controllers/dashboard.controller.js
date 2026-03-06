@@ -38,6 +38,10 @@ export const getAlerts = async (req, res, next) => {
       endInDays: req.query.endInDays,
       transitionDays: req.query.transitionDays,
       transitionLimit: req.query.transitionLimit,
+      agingDays: req.query.agingDays,
+      interviewDoneDays: req.query.interviewDoneDays,
+      interviewLimit: req.query.interviewLimit,
+      newApplicantDays: req.query.newApplicantDays,
     });
     return res.status(200).json({ success: true, data });
   } catch (error) {
