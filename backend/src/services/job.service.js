@@ -1,4 +1,5 @@
 import JobManagement from "../models/job.model.js";
+import { createJobStatusChangedAlert } from "./alert.service.js";
 const escapeRegex = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 export const createJob = async (jobData) => {
@@ -39,8 +40,18 @@ export const updateJob = async (jobId, jobData) => {
     return updatedJob;
 }
 
-export const updateJobStatus = async (jobId, jobStatus) => {
+export const updateJobStatus = async (jobId, jobStatus, updatedByUser = null) => {
+    const existing = await JobManagement.findById(jobId).select('jobTitle jobStatus');
     const updatedJob = await JobManagement.findByIdAndUpdate(jobId, { jobStatus }, { returnDocument: 'after' });
+    // fire notification if status changed (background)
+    createJobStatusChangedAlert({
+      job: existing || updatedJob,
+      fromStatus: existing?.jobStatus,
+      toStatus: jobStatus,
+      updatedBy: updatedByUser,
+    }).catch((err) => {
+      console.error('[Alert] createJobStatusChangedAlert failed', err);
+    });
     return updatedJob;
 }
 

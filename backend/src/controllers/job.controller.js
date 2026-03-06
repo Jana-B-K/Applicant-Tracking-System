@@ -51,7 +51,8 @@ export const updateJobStatus = async (req, res, next) => {
     try {
         const jobId = req.params.id;
         const { jobStatus } = req.body;
-        const updatedJob = await jobService.updateJobStatus(jobId, jobStatus);
+        const user = req.user || null;
+        const updatedJob = await jobService.updateJobStatus(jobId, jobStatus, user ? { id: user._id, name: `${user.firstName} ${user.lastName}`.trim() } : null);
         if (!updatedJob) {
             return res.status(404).json({ message: 'Job not found' });
         }

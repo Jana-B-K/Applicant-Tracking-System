@@ -56,6 +56,10 @@
  *         noticePeriod:
  *           type: number
  *           example: 30
+ *         recruiterId:
+ *           type: string
+ *           description: Optional id of the recruiter assigned to this candidate
+ *           example: 65f1c7ea7d85a8f7a70b6def
  *         referal:
  *           type: string
  *           example: Employee referral
@@ -171,6 +175,18 @@
  *           properties:
  *             _id:
  *               type: string
+ *             recruiter:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                 name:
+ *                   type: string
+ *                 email:
+ *                   type: string
+ *                   format: email
+ *                 role:
+ *                   type: string
  *             statusHistory:
  *               type: array
  *               items:
@@ -662,6 +678,7 @@
  * /candidate/{id}/interview:
  *   post:
  *     summary: Schedule a new interview round
+ *     description: Creates interview entry and triggers interviewer notifications. Assigned interviewer/co-interviewers receive in-app alert and email notification.
  *     tags: [Candidates]
  *     security:
  *       - bearerAuth: []
@@ -709,6 +726,7 @@
  * /candidate/{id}/interview/{interviewId}:
  *   patch:
  *     summary: Update interview result/feedback/details
+ *     description: Updates interview fields. If interviewer or schedule changes while interview is pending, assignment notifications are sent again to the assigned interviewer/co-interviewers.
  *     tags: [Candidates]
  *     security:
  *       - bearerAuth: []

@@ -61,6 +61,7 @@
  *   get:
  *     tags: [Dashboard]
  *     summary: Get segmented hiring alerts (closing jobs, job aging, stage transitions, completed interviews)
+ *     description: Returns dashboard alerts visible to the logged-in user. Public alerts and user-targeted alerts are merged with read status.
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -161,6 +162,7 @@
  *                               message: { type: string }
  *                               timestamp: { type: string, format: date-time }
  *                               timeAgo: { type: string, example: 2h ago }
+ *                               isRead: { type: boolean, example: false }
  *                               meta: { type: object }
  *                         generalNotifications:
  *                           type: array
@@ -175,6 +177,7 @@
  *                               message: { type: string }
  *                               timestamp: { type: string, format: date-time }
  *                               timeAgo: { type: string, example: 15m ago }
+ *                               isRead: { type: boolean, example: true }
  *                               meta: { type: object }
  *                     uiSummary:
  *                       type: object
@@ -182,6 +185,107 @@
  *                         importantNewCount: { type: integer, example: 2 }
  *                         generalNewCount: { type: integer, example: 5 }
  *                         totalNewCount: { type: integer, example: 7 }
+ *       401: { description: Unauthorized }
+ *       403: { description: Forbidden (missing viewDashboard permission) }
+ */
+
+/**
+ * @swagger
+ * /dashboard/alerts/read-all:
+ *   patch:
+ *     tags: [Dashboard]
+ *     summary: Mark all alerts as read for logged-in user
+ *     description: Marks only alerts visible to the current user as read.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: Alerts marked as read }
+ *       401: { description: Unauthorized }
+ *       403: { description: Forbidden (missing viewDashboard permission) }
+ */
+
+/**
+ * @swagger
+ * /dashboard/alerts/stream:
+ *   get:
+ *     tags: [Dashboard]
+ *     summary: Stream alerts via Server-Sent Events (SSE)
+ *     description: |
+ *       Opens a live SSE connection and emits:
+ *       - `snapshot` (initial payload)
+ *       - `update` (periodic refresh)
+ *       - `error` (stream refresh issue)
+ *       Keepalive comments are sent periodically to keep the connection open.
+ *       Use `token` query param for EventSource auth.
+ *       Stream payload uses the same `data` shape as `GET /dashboard/alerts`.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: token
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Access token for EventSource clients that cannot send Authorization header
+ *       - in: query
+ *         name: endInDays
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: transitionDays
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: transitionLimit
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: agingDays
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: interviewDoneDays
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: interviewLimit
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: newApplicantDays
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: SSE stream opened successfully
+ *         content:
+ *           text/event-stream:
+ *             schema:
+ *               type: string
+ *               example: |
+ *                 event: snapshot
+ *                 data: {"success":true,"data":{"uiAlerts":{"importantAndPriority":[],"generalNotifications":[]}}}
+ *       401: { description: Unauthorized }
+ *       403: { description: Forbidden (missing viewDashboard permission) }
+ */
+
+/**
+ * @swagger
+ * /dashboard/alerts/{alertId}/read:
+ *   patch:
+ *     tags: [Dashboard]
+ *     summary: Mark a single alert as read for logged-in user
+ *     description: Marks alert as read only if the alert is active and visible to current user.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: alertId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200: { description: Alert marked as read }
  *       401: { description: Unauthorized }
  *       403: { description: Forbidden (missing viewDashboard permission) }
  */

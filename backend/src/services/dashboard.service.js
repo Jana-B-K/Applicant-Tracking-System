@@ -1,6 +1,7 @@
 import JobManagement from "../models/job.model.js";
 import Candidate from "../models/candidate.model.js";
 import WeeklyReportLog from "../models/weeklyReportLog.model.js";
+import { getAlertsFeedForUser } from "./alert.service.js";
 
 const MS_IN_DAY = 24 * 60 * 60 * 1000;
 
@@ -220,6 +221,7 @@ export const getHiringAlerts = async ({
   interviewDoneDays: interviewDoneDaysInput,
   interviewLimit: interviewLimitInput,
   newApplicantDays: newApplicantDaysInput,
+  userId = null,
 } = {}) => {
   const endInDays = clampPositiveInt(endInDaysInput, 1, 1, 90);
   const transitionDays = clampPositiveInt(transitionDaysInput, 1, 1, 90);
@@ -573,6 +575,26 @@ export const getHiringAlerts = async ({
     totalNewCount: uiAlerts.importantAndPriority.length + uiAlerts.generalNotifications.length,
   };
 
+  let persistedAlerts = null;
+  try {
+    persistedAlerts = await getAlertsFeedForUser({
+      userId,
+      limitImportant: 20,
+      limitGeneral: 50,
+    });
+  } catch (error) {
+    console.error("[Alert] getAlertsFeedForUser failed", error);
+  }
+
+  const finalUiAlerts =
+    persistedAlerts &&
+    (persistedAlerts.uiAlerts.importantAndPriority.length > 0 ||
+      persistedAlerts.uiAlerts.generalNotifications.length > 0)
+      ? persistedAlerts.uiAlerts
+      : uiAlerts;
+
+  const finalUiSummary = persistedAlerts ? persistedAlerts.uiSummary : uiSummary;
+
   return {
     filters: {
       endInDays,
@@ -595,8 +617,8 @@ export const getHiringAlerts = async ({
       candidateStageTransitions,
       interviewsCompleted,
     },
-    uiAlerts,
-    uiSummary,
+    uiAlerts: finalUiAlerts,
+    uiSummary: finalUiSummary,
     // Backward-compatible keys
     jobsClosingSoon,
     jobAging,

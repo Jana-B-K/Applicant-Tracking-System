@@ -48,6 +48,16 @@ const candidateSchema = new mongoose.Schema(
       ref: "JobManagement",
       required: true,
     },
+    // recruiter assignment (if any)
+    recruiter: {
+      id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+      name: String,
+      email: String,
+      role: String,
+    },
     email: {
       type: String,
       required: true,
@@ -299,7 +309,7 @@ candidateSchema.virtual("lastCompletedInterview").get(function () {
 });
 
 // Pre-save hook to update metrics
-candidateSchema.pre("save", function (next) {
+candidateSchema.pre("save", function () {
   // Update days in pipeline
   if (this.createdAt) {
     const daysDiff = Math.floor(
@@ -331,7 +341,6 @@ candidateSchema.pre("save", function (next) {
   // Update last activity
   this.lastActivityAt = new Date();
   
-  next();
 });
 
 // Ensure virtuals are included in JSON

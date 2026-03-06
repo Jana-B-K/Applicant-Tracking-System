@@ -26,6 +26,33 @@ export const protect = async (req, res, next) => {
   }
 }
 
+export const protectStream = async (req, res, next) => {
+  try {
+    const headerToken = req.headers.authorization?.split(' ')[1]
+    const queryToken = req.query?.token
+    const token = headerToken || queryToken
+
+    if (!token) {
+      return res.status(401).json({ message: 'No token provided' })
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_ACCESS_TOKEN_SECRET)
+    const user = await User.findById(decoded.id).select('-password -refreshToken -accessToken -passwordResetTokenHash -passwordResetTokenExpiresAt')
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid token' })
+    }
+
+    req.user = user
+    req.permissions = await resolveUserPermissionsService({
+      role: user.role,
+      permissions: user.permissions,
+    })
+    next()
+  } catch (error) {
+    res.status(401).json({ message: 'Unauthorized' })
+  }
+}
+
 export const requirePermission = (permissionKey) => (req, res, next) => {
   if (!req.permissions?.[permissionKey]) {
     return res.status(403).json({ message: "Forbidden" });
