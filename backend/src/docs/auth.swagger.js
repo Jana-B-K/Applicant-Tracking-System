@@ -76,7 +76,7 @@
  * /auth/refresh-token:
  *   post:
  *     tags: [Auth]
- *     summary: Refresh access token using refresh token
+ *     summary: Refresh access token (also rotates refresh token cookie)
  *     requestBody:
  *       required: false
  *       content:
@@ -86,7 +86,7 @@
  *             properties:
  *               refreshToken: { type: string }
  *     responses:
- *       200: { description: Access token refreshed }
+ *       200: { description: Access token refreshed and refresh token rotated }
  *       401: { description: Invalid refresh token }
  */
 

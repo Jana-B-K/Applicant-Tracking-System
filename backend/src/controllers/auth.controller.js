@@ -38,7 +38,7 @@ export const login = async (req, res, next) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 6 * 24 * 60 * 60 * 1000, 
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     res.status(200).json({
@@ -66,6 +66,13 @@ export const refreshToken = async (req, res, next) => {
 
     const data = await refreshAccessTokenService(token);
 
+    res.cookie("refreshToken", data.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
     res.status(200).json({
       success: true,
       accessToken: data.accessToken,
@@ -73,6 +80,11 @@ export const refreshToken = async (req, res, next) => {
 
   } catch (error) {
     if (["Refresh token required", "Invalid or expired refresh token", "Invalid refresh token"].includes(error.message)) {
+      res.clearCookie("refreshToken", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+      });
       return res.status(401).json({
         success: false,
         message: error.message,

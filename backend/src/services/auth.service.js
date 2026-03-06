@@ -114,14 +114,21 @@ export const refreshAccessTokenService = async (refreshToken) => {
 
   const user = await User.findById(decoded.id);
 
-  if (!user || user.refreshToken !== refreshToken) {
+  if (!user || !user.isActive || user.refreshToken !== refreshToken) {
     throw new Error("Invalid refresh token");
   }
 
   const newAccessToken = generateAccessToken(user._id);
+  const newRefreshToken = generateRefreshToken(user._id);
+
+  await User.updateOne(
+    { _id: user._id },
+    { $set: { refreshToken: newRefreshToken } }
+  );
 
   return {
     accessToken: newAccessToken,
+    refreshToken: newRefreshToken,
   };
 };
 
