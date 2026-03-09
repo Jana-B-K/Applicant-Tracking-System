@@ -30,6 +30,15 @@ const weeklyReportLogSchema = new mongoose.Schema(
       default: null,
       trim: true,
     },
+    format: {
+      type: String,
+      enum: ["xlsx", "pdf"],
+      default: "xlsx",
+    },
+    filters: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
     status: {
       type: String,
       enum: ["success", "failed"],
