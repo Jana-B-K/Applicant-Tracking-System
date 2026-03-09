@@ -69,7 +69,7 @@ const DEFAULT_PERMISSION_MATRIX = {
     superadmin: true,
     hrrecruiter: true,
     hiringmanager: false,
-    interviewpanel: true,
+    interviewpanel: false,
     management: false,
   },
   manageUsers: {
@@ -466,6 +466,257 @@ const jobTemplates = [
     experienceLevel: "Mid-level",
   },
 ];
+  {
+    baseTitle: "Database Administrator",
+    description: "Manage MongoDB and PostgreSQL databases with focus on performance optimization.",
+    skillsRequired: ["MongoDB", "PostgreSQL", "MySQL", "Database Design", "Query Optimization", "Backup & Recovery", "Replication", "Sharding", "SQL", "NoSQL", "Linux", "Performance Tuning"],
+    department: "Platform",
+    location: "Bengaluru",
+    salaryRange: "14-20 LPA",
+    emplyementType: "Full-time",
+    experienceLevel: "Mid-level",
+  },
+  {
+    baseTitle: "Cloud Architect",
+    description: "Design and implement cloud solutions on AWS with high availability and scalability.",
+    skillsRequired: ["AWS", "EC2", "S3", "RDS", "Lambda", "CloudFormation", "VPC", "IAM", "Cost Optimization", "Security", "Terraform", "Docker"],
+    department: "Platform",
+    location: "Bengaluru",
+    salaryRange: "22-32 LPA",
+    emplyementType: "Full-time",
+    experienceLevel: "Senior",
+  },
+  {
+    baseTitle: "Python Developer",
+    description: "Build data processing pipelines and backend services using Python frameworks.",
+    skillsRequired: ["Python", "Django", "Flask", "FastAPI", "Pandas", "NumPy", "SQLAlchemy", "REST API", "PostgreSQL", "MongoDB", "Git", "Docker"],
+    department: "Engineering",
+    location: "Hyderabad",
+    salaryRange: "12-18 LPA",
+    emplyementType: "Full-time",
+    experienceLevel: "Mid-level",
+  },
+  {
+    baseTitle: "React Native Developer",
+    description: "Develop cross-platform mobile application for ATS using React Native.",
+    skillsRequired: ["React Native", "JavaScript", "TypeScript", "Redux", "Firebase", "Native Modules", "Testing", "Git", "REST API", "iOS", "Android", "Expo"],
+    department: "Engineering",
+    location: "Pune",
+    salaryRange: "13-19 LPA",
+    emplyementType: "Full-time",
+    experienceLevel: "Mid-level",
+  },
+  {
+    baseTitle: "Security Engineer",
+    description: "Implement security best practices and vulnerability assessments for ATS platform.",
+    skillsRequired: ["Cybersecurity", "OWASP", "Penetration Testing", "Encryption", "Authentication", "SSL/TLS", "Linux", "Network Security", "Compliance", "Security Audits", "Firewalls", "IDS/IPS"],
+    department: "Security",
+    location: "Bengaluru",
+    salaryRange: "16-24 LPA",
+    emplyementType: "Full-time",
+    experienceLevel: "Senior",
+  },
+  {
+    baseTitle: "Data Engineer",
+    description: "Build ETL pipelines and data warehousing solutions for analytics.",
+    skillsRequired: ["Python", "Apache Spark", "Hadoop", "Hive", "SQL", "Data Warehousing", "ETL", "AWS", "Git", "Scala", "Kafka", "BigData"],
+    department: "Data",
+    location: "Bengaluru",
+    salaryRange: "15-22 LPA",
+    emplyementType: "Full-time",
+    experienceLevel: "Mid-level",
+  },
+  {
+    baseTitle: "Machine Learning Engineer",
+    description: "Develop ML models for candidate matching and resume parsing.",
+    skillsRequired: ["Python", "TensorFlow", "PyTorch", "Scikit-learn", "NLP", "Deep Learning", "Data Analysis", "Pandas", "NumPy", "Git", "AWS", "Flask"],
+    department: "Data",
+    location: "Bengaluru",
+    salaryRange: "18-28 LPA",
+    emplyementType: "Full-time",
+    experienceLevel: "Senior",
+  },
+  {
+    baseTitle: "Java Developer",
+    description: "Develop robust backend services and enterprise applications.",
+    skillsRequired: ["Java", "Spring Boot", "Spring MVC", "Hibernate", "MySQL", "PostgreSQL", "REST API", "JUnit", "Maven", "Git", "Microservices", "Docker"],
+    department: "Engineering",
+    location: "Hyderabad",
+    salaryRange: "12-18 LPA",
+    emplyementType: "Full-time",
+    experienceLevel: "Mid-level",
+  },
+  {
+    baseTitle: "Technical Lead",
+    description: "Lead engineering team and drive technical decisions for platform development.",
+    skillsRequired: ["System Design", "Architecture", "Node.js", "React", "Leadership", "Mentoring", "Code Review", "Problem Solving", "Communication", "Agile", "DevOps", "AWS"],
+    department: "Engineering",
+    location: "Bengaluru",
+    salaryRange: "20-30 LPA",
+    emplyementType: "Full-time",
+    experienceLevel: "Senior",
+  },
+  {
+    baseTitle: "Performance Engineer",
+    description: "Optimize application performance and conduct load testing.",
+    skillsRequired: ["JMeter", "Load Testing", "Performance Profiling", "Node.js", "React", "Browser DevTools", "Network Analysis", "Monitoring", "Grafana", "New Relic", "Prometheus", "DataDog"],
+    department: "Quality",
+    location: "Pune",
+    salaryRange: "13-19 LPA",
+    emplyementType: "Full-time",
+    experienceLevel: "Mid-level",
+  },
+  {
+    baseTitle: "Golang Backend Developer",
+    description: "Build high-performance services using Go language.",
+    skillsRequired: ["Go", "Gin", "REST API", "PostgreSQL", "Redis", "Docker", "Kubernetes", "gRPC", "Concurrency", "Testing", "Git", "AWS"],
+    department: "Engineering",
+    location: "Bengaluru",
+    salaryRange: "16-24 LPA",
+    emplyementType: "Full-time",
+    experienceLevel: "Senior",
+  },
+  {
+    baseTitle: "Mobile Application Developer",
+    description: "Develop iOS and Android applications for ATS platform.",
+    skillsRequired: ["Swift", "Kotlin", "iOS Development", "Android Development", "REST API", "Firebase", "Mobile UI", "Testing", "Git", "Xcode", "Android Studio", "MVVM"],
+    department: "Engineering",
+    location: "Pune",
+    salaryRange: "14-20 LPA",
+    emplyementType: "Full-time",
+    experienceLevel: "Mid-level",
+  },
+  {
+    baseTitle: "Product Manager",
+    description: "Lead product strategy and roadmap for ATS platform.",
+    skillsRequired: ["Product Strategy", "Analytics", "User Research", "SQL", "Data Analysis", "Communication", "Agile", "Roadmapping", "Market Analysis", "Competitive Analysis", "Metrics", "Stakeholder Management"],
+    department: "Product",
+    location: "Bengaluru",
+    salaryRange: "18-28 LPA",
+    emplyementType: "Full-time",
+    experienceLevel: "Senior",
+  },
+  {
+    baseTitle: "Solutions Architect",
+    description: "Design scalable solutions for enterprise ATS implementations.",
+    skillsRequired: ["System Architecture", "Enterprise Solutions", "AWS", "Docker", "Kubernetes", "Database Design", "Security", "Best Practices", "Communication", "Consulting", "Enterprise Java", "Integration"],
+    department: "Solutions",
+    location: "Bengaluru",
+    salaryRange: "20-30 LPA",
+    emplyementType: "Full-time",
+    experienceLevel: "Senior",
+  },
+  {
+    baseTitle: "Blockchain Developer",
+    description: "Develop blockchain-based solutions for credential verification.",
+    skillsRequired: ["Solidity", "Ethereum", "Smart Contracts", "Web3.js", "Blockchain", "Cryptography", "DeFi", "JavaScript", "Git", "Testing", "Security", "Consensus"],
+    department: "Engineering",
+    location: "Bengaluru",
+    salaryRange: "18-26 LPA",
+    emplyementType: "Full-time",
+    experienceLevel: "Senior",
+  },
+  {
+    baseTitle: "API Developer",
+    description: "Design and develop RESTful APIs for third-party integrations.",
+    skillsRequired: ["REST API", "Node.js", "Express", "API Documentation", "GraphQL", "Authentication", "Rate Limiting", "Versioning", "MongoDB", "PostgreSQL", "Postman", "Git"],
+    department: "Engineering",
+    location: "Hyderabad",
+    salaryRange: "13-19 LPA",
+    emplyementType: "Full-time",
+    experienceLevel: "Mid-level",
+  },
+  {
+    baseTitle: "UI/UX Developer",
+    description: "Create beautiful and intuitive user interfaces for ATS.",
+    skillsRequired: ["React", "Figma", "HTML5", "CSS3", "JavaScript", "Responsive Design", "Material Design", "Accessibility", "CSS Animations", "Performance", "Git", "Design Systems"],
+    department: "Design",
+    location: "Pune",
+    salaryRange: "12-17 LPA",
+    emplyementType: "Full-time",
+    experienceLevel: "Mid-level",
+  },
+  {
+    baseTitle: "System Administrator",
+    description: "Manage infrastructure, servers, and network for ATS platform.",
+    skillsRequired: ["Linux", "Windows Server", "Networking", "Security", "Backup & Recovery", "System Monitoring", "Cloud", "AWS", "Virtual Machines", "Automation", "Bash", "PowerShell"],
+    department: "Operations",
+    location: "Coimbatore",
+    salaryRange: "11-16 LPA",
+    emplyementType: "Full-time",
+    experienceLevel: "Mid-level",
+  },
+  {
+    baseTitle: "Integration Engineer",
+    description: "Integrate third-party services and build connectors for ATS.",
+    skillsRequired: ["API Integration", "Webhook", "Node.js", "REST API", "Authentication", "Data Mapping", "Error Handling", "Testing", "Documentation", "Git", "Postman", "Zapier"],
+    department: "Engineering",
+    location: "Hyderabad",
+    salaryRange: "13-19 LPA",
+    emplyementType: "Full-time",
+    experienceLevel: "Mid-level",
+  },
+  {
+    baseTitle: "Release Engineer",
+    description: "Manage release cycles and deployment processes.",
+    skillsRequired: ["CI/CD", "Jenkins", "GitLab", "Docker", "Kubernetes", "Release Management", "Scripting", "Bash", "Git", "Deployment", "Monitoring", "Troubleshooting"],
+    department: "Platform",
+    location: "Chennai",
+    salaryRange: "12-18 LPA",
+    emplyementType: "Full-time",
+    experienceLevel: "Mid-level",
+  },
+  {
+    baseTitle: "Documentation Specialist",
+    description: "Create comprehensive technical and user documentation.",
+    skillsRequired: ["Technical Writing", "Markdown", "API Documentation", "User Guides", "Video Creation", "Figma", "Git", "Tools", "Communication", "Attention to Detail", "Confluence", "Swagger"],
+    department: "Technical Writing",
+    location: "Bengaluru",
+    salaryRange: "10-15 LPA",
+    emplyementType: "Full-time",
+    experienceLevel: "Junior",
+  },
+  {
+    baseTitle: "IT Support Specialist",
+    description: "Provide technical support and troubleshooting for users.",
+    skillsRequired: ["Customer Support", "Troubleshooting", "Windows", "Mac", "Linux", "Networking", "Active Directory", "Ticketing System", "Communication", "Hardware", "Software", "Problem Solving"],
+    department: "Support",
+    location: "Coimbatore",
+    salaryRange: "8-12 LPA",
+    emplyementType: "Full-time",
+    experienceLevel: "Junior",
+  },
+  {
+    baseTitle: "Business Analyst",
+    description: "Analyze requirements and document business processes.",
+    skillsRequired: ["Business Analysis", "Requirements Gathering", "Process Mapping", "SQL", "Data Analysis", "Communication", "Excel", "Visio", "Agile", "Documentation", "Stakeholder Management", "Testing"],
+    department: "Business",
+    location: "Bengaluru",
+    salaryRange: "11-16 LPA",
+    emplyementType: "Full-time",
+    experienceLevel: "Mid-level",
+  },
+  {
+    baseTitle: "IT Security Analyst",
+    description: "Monitor and respond to security incidents.",
+    skillsRequired: ["SIEM Tools", "Log Analysis", "Incident Response", "Threat Detection", "Cybersecurity", "Networking", "Linux", "Windows", "Firewalls", "IDS/IPS", "Security Protocols", "Analysis"],
+    department: "Security",
+    location: "Bengaluru",
+    salaryRange: "14-20 LPA",
+    emplyementType: "Full-time",
+    experienceLevel: "Mid-level",
+  },
+  {
+    baseTitle: "Compliance Officer",
+    description: "Ensure compliance with regulations and standards.",
+    skillsRequired: ["Compliance", "GDPR", "ISO Standards", "Auditing", "Risk Management", "Documentation", "Legal", "Reporting", "HIPAA", "SOC 2", "Data Privacy", "Regulatory"],
+    department: "Compliance",
+    location: "Bengaluru",
+    salaryRange: "13-19 LPA",
+    emplyementType: "Full-time",
+    experienceLevel: "Mid-level",
+  },
+];
 
 const jobSeed = Array.from({ length: 30 }, (_, index) => {
   const template = jobTemplates[index % jobTemplates.length];
@@ -565,7 +816,6 @@ const run = async () => {
   const jobByTitle = new Map(jobs.map((j) => [j.jobTitle, j]));
 
   const hrUser = userByEmail.get("hr@ats.local");
-  const hmUser = userByEmail.get("manager@ats.local");
   const panelUsers = [
     userByEmail.get("panel@ats.local"),
     userByEmail.get("jana.panel@ats.local"),
@@ -574,8 +824,8 @@ const run = async () => {
     userByEmail.get("nirmal.panel@ats.local"),
     userByEmail.get("nishan.panel@ats.local"),
   ];
-  if (!hrUser || !hmUser || panelUsers.some(p => !p)) {
-    throw new Error("HR/Manager/Panel users not found after user seed");
+  if (!hrUser || panelUsers.some(p => !p)) {
+    throw new Error("HR/Panel users not found after user seed");
   }
 
   const realNames = [
@@ -697,101 +947,58 @@ const run = async () => {
     "Exceptional all-around performer. Highly recommended for immediate onboarding.",
   ];
 
+  const interviewStages = [
+    "Technical Interview 1", "Technical Interview 2", "HR Interview"
+  ];
+
+  const interviewResults = ["Passed", "Passed", "On Hold"];
+
   const candidateSeed = Array.from({ length: 30 }, (_, index) => {
     const linkedJob = jobSeed[index % jobSeed.length];
     const candidateLocation = locations[index % locations.length];
+    const hasInterview = true;
     const interviewCount = (index % 3) + 1;
-    
-    // Offer status: first 3 candidates get offers, rest are good
-    const offerStatuses = [
-      "Offered", "Offer Accepted", "Offer Declined",
-      "Selected", "Selected", "Selected",
-      "HR Interview", "HR Interview", "HR Interview",
-      "Technical Interview 2", "Technical Interview 2", "Technical Interview 2",
-      "Technical Interview 1", "Technical Interview 1", "Technical Interview 1",
-      "Shortlisted", "Shortlisted", "Shortlisted",
-      "Applied", "Applied", "Applied",
-      "Applied", "Applied", "Applied",
-      "Applied", "Applied", "Applied",
-      "Applied", "Applied", "Applied",
+    const statuses = [
+      "Technical Interview 1", "Technical Interview 2", "HR Interview",
+      "Shortlisted", "Applied"
     ];
-    const status = offerStatuses[index];
+    const status = statuses[index % statuses.length];
 
-    // Create interviews array
+    // Create interviews array - only for Technical Interview 1, 2, and HR Interview stages
+    // Distribute interviews across 5 panel members
     const interviews = [];
-    
-    // Technical Interview 1 - assigned to interview panel
-    const ti1PanelMemberIndex = index % panelUsers.length;
-    const ti1Panel = panelUsers[ti1PanelMemberIndex];
-    const ti1CompletedAt = index < 5 ? new Date(Date.now() - 14 * 24 * 60 * 60 * 1000) : null;
-    
-    interviews.push({
-      stage: "Technical Interview 1",
-      interviewer: {
-        id: ti1Panel._id,
-        name: `${ti1Panel.firstName} ${ti1Panel.lastName}`,
-        email: ti1Panel.email,
-        role: ti1Panel.role,
-      },
-      coInterviewers: [],
-      scheduledAt: new Date(Date.now() + (index + 1) * 24 * 60 * 60 * 1000),
-      duration: 60,
-      meetingLink: `https://meet.google.com/interview-${index}-1`,
-      location: candidateLocation,
-      completedAt: ti1CompletedAt,
-      actualDuration: ti1CompletedAt ? 55 : null,
-      result: ti1CompletedAt ? "Passed" : "Pending",
-      feedback: ti1CompletedAt ? interviewFeedbackData[index] : null,
-    });
-
-    // Technical Interview 2 - assigned to interview panel (if interviewCount > 1)
-    if (interviewCount > 1) {
-      const ti2PanelMemberIndex = (index + 1) % panelUsers.length;
-      const ti2Panel = panelUsers[ti2PanelMemberIndex];
-      const ti2CompletedAt = index < 10 ? new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) : null;
+    for (let i = 0; i < interviewCount; i++) {
+      const completedAt = i < interviewCount - 1 ? new Date(Date.now() - (interviewCount - i - 1) * 7 * 24 * 60 * 60 * 1000) : null;
+      const interviewResult = i === interviewCount - 1 ? "Pending" : interviewResults[i];
+      
+      // Distribute panel members: rotate through 5 panel members for each interview
+      const panelMemberIndex = (index + i) % panelUsers.length;
+      const assignedPanel = panelUsers[panelMemberIndex];
       
       interviews.push({
-        stage: "Technical Interview 2",
+        stage: interviewStages[i],
         interviewer: {
-          id: ti2Panel._id,
-          name: `${ti2Panel.firstName} ${ti2Panel.lastName}`,
-          email: ti2Panel.email,
-          role: ti2Panel.role,
+          id: assignedPanel._id,
+          name: `${assignedPanel.firstName} ${assignedPanel.lastName}`,
+          email: assignedPanel.email,
+          role: assignedPanel.role,
         },
-        coInterviewers: [],
-        scheduledAt: new Date(Date.now() + (index + 8) * 24 * 60 * 60 * 1000),
-        duration: 60,
-        meetingLink: `https://meet.google.com/interview-${index}-2`,
+        coInterviewers: i > 0 ? [
+          {
+            id: hrUser._id,
+            name: `${hrUser.firstName} ${hrUser.lastName}`,
+            email: hrUser.email,
+            role: hrUser.role,
+          }
+        ] : [],
+        scheduledAt: new Date(Date.now() + (index + 1) * 24 * 60 * 60 * 1000 + i * 7 * 24 * 60 * 60 * 1000),
+        duration: 45 + (index % 3) * 15,
+        meetingLink: `https://meet.google.com/interview-${index}-${i}`,
         location: candidateLocation,
-        completedAt: ti2CompletedAt,
-        actualDuration: ti2CompletedAt ? 58 : null,
-        result: ti2CompletedAt ? "Passed" : "Pending",
-        feedback: ti2CompletedAt ? interviewFeedbackData[(index + 1) % interviewFeedbackData.length] : null,
-      });
-    }
-
-    // HR Interview - assigned to HR Manager or HR Recruiter (if interviewCount > 2)
-    if (interviewCount > 2) {
-      const hrInterviewer = index % 2 === 0 ? hmUser : hrUser;
-      const hrCompletedAt = index < 15 ? new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) : null;
-      
-      interviews.push({
-        stage: "HR Interview",
-        interviewer: {
-          id: hrInterviewer._id,
-          name: `${hrInterviewer.firstName} ${hrInterviewer.lastName}`,
-          email: hrInterviewer.email,
-          role: hrInterviewer.role,
-        },
-        coInterviewers: [],
-        scheduledAt: new Date(Date.now() + (index + 15) * 24 * 60 * 60 * 1000),
-        duration: 45,
-        meetingLink: `https://meet.google.com/interview-${index}-3`,
-        location: candidateLocation,
-        completedAt: hrCompletedAt,
-        actualDuration: hrCompletedAt ? 42 : null,
-        result: hrCompletedAt ? (index < 3 ? "Passed" : (index < 5 ? "Passed" : "Passed")) : "Pending",
-        feedback: hrCompletedAt ? interviewFeedbackData[(index + 2) % interviewFeedbackData.length] : null,
+        completedAt,
+        actualDuration: completedAt ? 40 + (index % 5) * 10 : null,
+        result: interviewResult,
+        feedback: interviewResult !== "Pending" ? interviewFeedbackData[(index + i) % interviewFeedbackData.length] : null,
       });
     }
 
@@ -872,7 +1079,6 @@ const run = async () => {
     candidates: candidateCount,
     rbacPolicies: policyCount,
     defaultPassword: "Password@1234",
-    offeredCandidates: 3,
   });
 };
 

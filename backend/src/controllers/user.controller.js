@@ -4,10 +4,11 @@ import {
   getUsersService,
   updateUserByIdService,
 } from "../services/user.service.js";
+import { registerService } from "../services/auth.service.js";
 
 export const createUser = async (req, res, next) => {
   try {
-    const user = await createUserService(req.body);
+    const user = await registerService(req.body);
     return res.status(201).json({
       success: true,
       message: "User created successfully",

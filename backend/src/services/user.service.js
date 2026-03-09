@@ -1,5 +1,4 @@
 import User from "../models/user.model.js";
-import bcrypt from "bcryptjs";
 import { buildRoleDiffOverridesService, resolveUserPermissionsService } from "./rbac.service.js";
 
 const USER_SAFE_SELECT = "-password -refreshToken -passwordResetTokenHash -passwordResetTokenExpiresAt -passwordResetOtpAttempts -passwordResetLastSentAt";

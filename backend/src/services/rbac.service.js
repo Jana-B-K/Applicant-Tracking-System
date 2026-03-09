@@ -78,7 +78,7 @@ export const DEFAULT_PERMISSION_MATRIX = {
     superadmin: true,
     hrrecruiter: true,
     hiringmanager: false,
-    interviewpanel: false,
+    interviewpanel: true,
     management: false,
   },
   manageUsers: {
@@ -97,6 +97,20 @@ const normalizePolicyResponse = (doc) => ({
   updatedAt: doc.updatedAt,
 });
 
+const shouldAutoFixLegacyInterviewPanelStagePermission = (policy) => {
+  const stagePermission = policy?.permissions?.manageCandidateStages;
+  if (!stagePermission) return false;
+
+  // Auto-migrate only the known legacy default shape where interviewpanel was false.
+  return (
+    stagePermission.superadmin === true &&
+    stagePermission.hrrecruiter === true &&
+    stagePermission.hiringmanager === false &&
+    stagePermission.interviewpanel === false &&
+    stagePermission.management === false
+  );
+};
+
 const ensureDefaultPolicy = async () => {
   let policy = await RbacPolicy.findOne({ name: DEFAULT_POLICY_NAME });
   if (!policy) {
@@ -104,7 +118,14 @@ const ensureDefaultPolicy = async () => {
       name: DEFAULT_POLICY_NAME,
       permissions: DEFAULT_PERMISSION_MATRIX,
     });
+    return policy;
   }
+
+  if (shouldAutoFixLegacyInterviewPanelStagePermission(policy)) {
+    policy.permissions.manageCandidateStages.interviewpanel = true;
+    await policy.save();
+  }
+
   return policy;
 };
 
